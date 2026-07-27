@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
-import { divIcon, type MarkerCluster } from "leaflet";
+import { useEffect, useMemo, useRef, type ReactElement } from "react";
+import { divIcon, type DivIcon, type MarkerCluster } from "leaflet";
 import { MapContainer, Marker, Popup, TileLayer, ZoomControl, useMapEvents } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-markercluster";
 import { SPECIES_LABELS, type Sighting } from "@runo-map/shared";
@@ -30,6 +30,15 @@ function mushroomPin(age: PinAge) {
     iconAnchor: [size / 2, size / 2],
   });
 }
+
+// Only three pin variants exist, so build them once. A fresh icon object per
+// render would make react-leaflet call setIcon on every marker, which forces
+// leaflet.markercluster to rebuild its clusters.
+const PIN_ICONS: Record<PinAge, DivIcon> = {
+  fresh: mushroomPin("fresh"),
+  recent: mushroomPin("recent"),
+  older: mushroomPin("older"),
+};
 
 // Cluster bubble grows with the number of pins inside; same forest palette as fresh pins.
 function clusterIcon(cluster: MarkerCluster) {
@@ -87,8 +96,44 @@ interface SightingsMapProps {
   onBboxChange?: (bbox: string) => void;
 }
 
+function sightingMarker(sighting: Sighting, now: Date) {
+  const age = pinAgeCategory(sighting.foundAt, now);
+  const label = SPECIES_LABELS[sighting.species];
+  return (
+    <Marker key={sighting.id} position={[sighting.lat, sighting.lng]} icon={PIN_ICONS[age]}>
+      <Popup>
+        <strong>{label.pl}</strong>
+        <br />
+        <em>{label.latin}</em>
+        <br />
+        {AGE_LABELS[age]} — znalezione {formatFoundAgo(sighting.foundAt, now)}
+        {sighting.comment && (
+          <>
+            <br />
+            {sighting.comment}
+          </>
+        )}
+      </Popup>
+    </Marker>
+  );
+}
+
 export function SightingsMap({ sightings, onMapClick, onBboxChange }: SightingsMapProps) {
-  const now = new Date();
+  // Marker elements are cached per sighting id and reused across renders. React
+  // then skips those subtrees, so react-leaflet never re-applies an unchanged
+  // position — leaflet.markercluster reacts to a marker move by dropping and
+  // re-adding it, which restarts every cluster animation (visible flicker).
+  // A refetch therefore only touches the markers that actually appeared or left.
+  const cache = useRef(new Map<string, ReactElement>());
+  const markers = useMemo(() => {
+    const now = new Date();
+    const next = new Map<string, ReactElement>();
+    for (const sighting of sightings) {
+      next.set(sighting.id, cache.current.get(sighting.id) ?? sightingMarker(sighting, now));
+    }
+    cache.current = next;
+    return [...next.values()];
+  }, [sightings]);
 
   return (
     <MapContainer
@@ -110,27 +155,7 @@ export function SightingsMap({ sightings, onMapClick, onBboxChange }: SightingsM
         maxClusterRadius={60}
         showCoverageOnHover={false}
       >
-        {sightings.map((sighting) => {
-          const age = pinAgeCategory(sighting.foundAt, now);
-          const label = SPECIES_LABELS[sighting.species];
-          return (
-            <Marker key={sighting.id} position={[sighting.lat, sighting.lng]} icon={mushroomPin(age)}>
-              <Popup>
-                <strong>{label.pl}</strong>
-                <br />
-                <em>{label.latin}</em>
-                <br />
-                {AGE_LABELS[age]} — znalezione {formatFoundAgo(sighting.foundAt, now)}
-                {sighting.comment && (
-                  <>
-                    <br />
-                    {sighting.comment}
-                  </>
-                )}
-              </Popup>
-            </Marker>
-          );
-        })}
+        {markers}
       </MarkerClusterGroup>
     </MapContainer>
   );

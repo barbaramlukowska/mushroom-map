@@ -9,6 +9,13 @@ import { LoaderCircle } from "lucide-react";
 import { LOADING_BANNER_DELAY_MS, WAKING_THRESHOLD_MS, loadingStage, type LoadingStage } from "@/lib/loading-stage";
 import { ReportForm } from "./report-form";
 
+// Sightings are immutable once reported, so the id list fully identifies a
+// result set.
+function sameSightings(a: Sighting[], b: Sighting[]): boolean {
+  if (a.length !== b.length) return false;
+  return a.every((sighting, index) => sighting.id === b[index].id);
+}
+
 // Leaflet touches `window` on import, so the map must never render on the server.
 const SightingsMap = dynamic(
   () => import("./sightings-map").then((mod) => mod.SightingsMap),
@@ -69,7 +76,10 @@ export function MapView() {
         const data = (await res.json()) as Sighting[];
         clearStageTimers();
         setLoadStage("hidden");
-        setSightings(data);
+        // Keeping the previous array when the result set is unchanged (common
+        // when zooming inside an already-loaded area) spares the map a marker
+        // rebuild, which would restart the cluster animation.
+        setSightings((previous) => (sameSightings(previous, data) ? previous : data));
         setFetchFailed(false);
       })
       .catch((error) => {

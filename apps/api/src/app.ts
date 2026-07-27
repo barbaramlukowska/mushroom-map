@@ -40,6 +40,12 @@ export function createApp(store: Store = createStore(demoSeed)): Express {
     res.json(sighting);
   });
 
+  // Global (not per-view) so a species keeps its color and its rank in the filter
+  // list as the map moves. Ordered most-reported first.
+  app.get("/api/species-stats", async (_req, res) => {
+    res.json(await store.listSpeciesStats());
+  });
+
   // Anti-vandalism: max 10 new sightings per IP per hour; reads stay unlimited.
   const postLimiter = rateLimit({
     windowMs: 60 * 60 * 1000,

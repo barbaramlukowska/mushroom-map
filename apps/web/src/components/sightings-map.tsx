@@ -6,6 +6,7 @@ import { MapContainer, Marker, Popup, TileLayer, ZoomControl, useMapEvents } fro
 import MarkerClusterGroup from "react-leaflet-markercluster";
 import { SPECIES_LABELS, type Sighting } from "@runo-map/shared";
 import { pinAgeCategory, type PinAge } from "@/lib/pin-age";
+import { pinAppearance, type PinMode } from "@/lib/species-colors";
 import { COLOR } from "@/lib/tokens";
 import { buildTileUrl } from "@/lib/tile-url";
 import "leaflet/dist/leaflet.css";
@@ -13,32 +14,33 @@ import "react-leaflet-markercluster/styles";
 
 const POLAND_CENTER: [number, number] = [52.0, 19.5];
 
-const PIN_STYLES: Record<PinAge, { background: string; iconColor: string; size: number }> = {
-  fresh: { background: COLOR.forestMid, iconColor: COLOR.cream, size: 30 },
-  recent: { background: COLOR.forestSoft, iconColor: COLOR.cream, size: 24 },
-  older: { background: COLOR.stone, iconColor: COLOR.forestSage, size: 20 },
-};
+const MUSHROOM_PATH =
+  "M12 3C7.5 3 4 6.5 4 10c0 2.5 1.5 4.5 3.5 5.5V19c0 .6.4 1 1 1h7c.6 0 1-.4 1-1v-3.5C18.5 14.5 20 12.5 20 10c0-3.5-3.5-7-8-7z";
 
-function mushroomPin(age: PinAge) {
-  const { background, iconColor, size } = PIN_STYLES[age];
+function mushroomPin(age: PinAge, speciesColor: string | undefined, mode: PinMode): DivIcon {
+  const { background, iconColor, size } = pinAppearance(age, speciesColor, mode);
   return divIcon({
     className: "",
     html: `<div style="width:${size}px;height:${size}px;background:${background};border:2px solid rgba(255,255,255,0.7);border-radius:50%;box-shadow:0 3px 10px rgba(45,76,59,0.4);display:flex;align-items:center;justify-content:center;">
-      <svg width="${size * 0.45}" height="${size * 0.45}" viewBox="0 0 24 24" fill="none"><path d="M12 3C7.5 3 4 6.5 4 10c0 2.5 1.5 4.5 3.5 5.5V19c0 .6.4 1 1 1h7c.6 0 1-.4 1-1v-3.5C18.5 14.5 20 12.5 20 10c0-3.5-3.5-7-8-7z" stroke="${iconColor}" stroke-width="1.6"/><line x1="12" y1="15.5" x2="12" y2="20" stroke="${iconColor}" stroke-width="1.6"/></svg>
+      <svg width="${size * 0.45}" height="${size * 0.45}" viewBox="0 0 24 24" fill="none"><path d="${MUSHROOM_PATH}" stroke="${iconColor}" stroke-width="1.6"/><line x1="12" y1="15.5" x2="12" y2="20" stroke="${iconColor}" stroke-width="1.6"/></svg>
     </div>`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
   });
 }
 
-// Only three pin variants exist, so build them once. A fresh icon object per
-// render would make react-leaflet call setIcon on every marker, which forces
-// leaflet.markercluster to rebuild its clusters.
-const PIN_ICONS: Record<PinAge, DivIcon> = {
-  fresh: mushroomPin("fresh"),
-  recent: mushroomPin("recent"),
-  older: mushroomPin("older"),
-};
+// Icons are shared across markers with the same look; a new object per render
+// would make react-leaflet re-apply setIcon and restart every cluster animation.
+const iconCache = new Map<string, DivIcon>();
+
+function pinIcon(age: PinAge, speciesColor: string | undefined, mode: PinMode): DivIcon {
+  const key = `${mode}:${age}:${speciesColor ?? "none"}`;
+  const cached = iconCache.get(key);
+  if (cached) return cached;
+  const icon = mushroomPin(age, speciesColor, mode);
+  iconCache.set(key, icon);
+  return icon;
+}
 
 // Cluster bubble grows with the number of pins inside; same forest palette as fresh pins.
 function clusterIcon(cluster: MarkerCluster) {
@@ -92,15 +94,26 @@ function BboxHandler({ onBboxChange }: { onBboxChange: (bbox: string) => void })
 
 interface SightingsMapProps {
   sightings: Sighting[];
+  speciesColors: Record<string, string>;
+  mode: PinMode;
   onMapClick?: (location: { lat: number; lng: number }) => void;
   onBboxChange?: (bbox: string) => void;
 }
 
-function sightingMarker(sighting: Sighting, now: Date) {
+function sightingMarker(
+  sighting: Sighting,
+  now: Date,
+  speciesColors: Record<string, string>,
+  mode: PinMode,
+) {
   const age = pinAgeCategory(sighting.foundAt, now);
   const label = SPECIES_LABELS[sighting.species];
   return (
-    <Marker key={sighting.id} position={[sighting.lat, sighting.lng]} icon={PIN_ICONS[age]}>
+    <Marker
+      key={sighting.id}
+      position={[sighting.lat, sighting.lng]}
+      icon={pinIcon(age, speciesColors[sighting.species], mode)}
+    >
       <Popup>
         <strong>{label.pl}</strong>
         <br />
@@ -118,22 +131,39 @@ function sightingMarker(sighting: Sighting, now: Date) {
   );
 }
 
-export function SightingsMap({ sightings, onMapClick, onBboxChange }: SightingsMapProps) {
+export function SightingsMap({
+  sightings,
+  speciesColors,
+  mode,
+  onMapClick,
+  onBboxChange,
+}: SightingsMapProps) {
   // Marker elements are cached per sighting id and reused across renders. React
   // then skips those subtrees, so react-leaflet never re-applies an unchanged
   // position — leaflet.markercluster reacts to a marker move by dropping and
   // re-adding it, which restarts every cluster animation (visible flicker).
   // A refetch therefore only touches the markers that actually appeared or left.
-  const cache = useRef(new Map<string, ReactElement>());
+  // The cache is valid for one appearance only; a mode or color change resets it
+  // inside the memo, because an effect would run too late for this render.
+  const cache = useRef({ appearance: "", markers: new Map<string, ReactElement>() });
+  const appearance = `${mode}:${Object.entries(speciesColors).sort().join()}`;
+
   const markers = useMemo(() => {
     const now = new Date();
+    if (cache.current.appearance !== appearance) {
+      cache.current = { appearance, markers: new Map() };
+    }
     const next = new Map<string, ReactElement>();
     for (const sighting of sightings) {
-      next.set(sighting.id, cache.current.get(sighting.id) ?? sightingMarker(sighting, now));
+      next.set(
+        sighting.id,
+        cache.current.markers.get(sighting.id) ??
+          sightingMarker(sighting, now, speciesColors, mode),
+      );
     }
-    cache.current = next;
+    cache.current = { appearance, markers: next };
     return [...next.values()];
-  }, [sightings]);
+  }, [sightings, speciesColors, mode, appearance]);
 
   return (
     <MapContainer

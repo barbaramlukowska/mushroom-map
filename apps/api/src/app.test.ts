@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import request from "supertest";
+import { SPECIES_COLOR_PALETTE } from "@runo-map/shared";
 import { createApp } from "./app.js";
+import { createStore } from "./store.js";
 
 describe("GET /api/sightings", () => {
   it("responds 200 with a list of sightings", async () => {
@@ -96,6 +98,60 @@ describe("GET /api/sightings/:id", () => {
 
     expect(res.status).toBe(404);
     expect(res.body).toEqual({ error: "Not found" });
+  });
+});
+
+describe("GET /api/species-stats", () => {
+  it("responds 200 with one entry per seeded species, colored by report count", async () => {
+    const res = await request(createApp()).get("/api/species-stats");
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual([
+      { species: "BOROWIK", count: 1, color: SPECIES_COLOR_PALETTE[0] },
+      { species: "KURKA", count: 1, color: SPECIES_COLOR_PALETTE[1] },
+    ]);
+  });
+
+  it("responds with an empty list when nothing has been reported", async () => {
+    const res = await request(createApp(createStore([]))).get("/api/species-stats");
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual([]);
+  });
+
+  it("orders most-reported first so the filter panel can follow the payload", async () => {
+    const app = createApp();
+
+    for (let i = 0; i < 2; i++) {
+      await request(app).post("/api/sightings").send({
+        species: "MASLAK",
+        lat: 52.2,
+        lng: 21.1,
+        foundAt: "2026-07-20T00:00:00.000Z",
+      });
+    }
+    const res = await request(app).get("/api/species-stats");
+
+    expect(res.body[0]).toMatchObject({ species: "MASLAK", count: 2 });
+  });
+
+  it("moves the leading color to a species that overtakes on count", async () => {
+    const app = createApp();
+    const colorOf = (body: { species: string; color?: string }[], species: string) =>
+      body.find((s) => s.species === species)?.color;
+
+    for (let i = 0; i < 3; i++) {
+      await request(app).post("/api/sightings").send({
+        species: "MASLAK",
+        lat: 52.2,
+        lng: 21.1,
+        foundAt: "2026-07-20T00:00:00.000Z",
+      });
+    }
+    const res = await request(app).get("/api/species-stats");
+
+    expect(colorOf(res.body, "MASLAK")).toBe(SPECIES_COLOR_PALETTE[0]);
+    expect(colorOf(res.body, "BOROWIK")).toBe(SPECIES_COLOR_PALETTE[1]);
   });
 });
 
@@ -207,6 +263,9 @@ describe("error handling", () => {
         throw new Error("db exploded");
       },
       getById() {
+        throw new Error("db exploded");
+      },
+      listSpeciesStats() {
         throw new Error("db exploded");
       },
     };

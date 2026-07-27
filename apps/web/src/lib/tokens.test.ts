@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { SPECIES_PIN_RAMP } from "./species-colors";
 import { COLOR } from "./tokens";
 
 // Relative luminance + contrast ratio per WCAG 2.x.
@@ -54,6 +55,18 @@ describe("token contrast (WCAG 2.2 AA text)", () => {
     ["destructive-foreground on destructive", COLOR.cream, COLOR.red],
   ])("%s meets AA", (_label, fg, bg) => {
     expect(contrast(fg, bg)).toBeGreaterThanOrEqual(AA);
+  });
+});
+
+// The mushroom glyph inside a pin is a graphical object, so the bar is 3:1
+// (WCAG 2.2 SC 1.4.11), not the 4.5:1 that applies to text.
+describe("pin glyph contrast (WCAG 2.2 AA non-text)", () => {
+  const AA_NON_TEXT = 3;
+
+  it.each(Object.entries(SPECIES_PIN_RAMP).flatMap(([color, ramp]) =>
+    Object.entries(ramp).map(([age, fill]) => [`${color} ${age}`, fill] as const),
+  ))("%s keeps its glyph readable", (_label, fill) => {
+    expect(contrast(fill.iconColor, fill.background)).toBeGreaterThanOrEqual(AA_NON_TEXT);
   });
 });
 

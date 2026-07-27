@@ -8,20 +8,20 @@ describe("pinAgeCategory", () => {
     expect(pinAgeCategory("2026-07-13T08:00:00Z", now)).toBe("fresh");
   });
 
-  it("returns fresh just under 7 days", () => {
-    expect(pinAgeCategory("2026-07-06T13:00:00Z", now)).toBe("fresh");
+  it("returns fresh just under 3 days", () => {
+    expect(pinAgeCategory("2026-07-10T13:00:00Z", now)).toBe("fresh");
   });
 
-  it("returns recent at exactly 7 days", () => {
-    expect(pinAgeCategory("2026-07-06T12:00:00Z", now)).toBe("recent");
+  it("returns recent at exactly 3 days", () => {
+    expect(pinAgeCategory("2026-07-10T12:00:00Z", now)).toBe("recent");
   });
 
-  it("returns recent just under 14 days", () => {
-    expect(pinAgeCategory("2026-06-29T13:00:00Z", now)).toBe("recent");
+  it("returns recent just under 7 days", () => {
+    expect(pinAgeCategory("2026-07-06T13:00:00Z", now)).toBe("recent");
   });
 
-  it("returns older at exactly 14 days", () => {
-    expect(pinAgeCategory("2026-06-29T12:00:00Z", now)).toBe("older");
+  it("returns older at exactly 7 days", () => {
+    expect(pinAgeCategory("2026-07-06T12:00:00Z", now)).toBe("older");
   });
 
   it("returns older for a month-old sighting", () => {

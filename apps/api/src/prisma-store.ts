@@ -1,4 +1,4 @@
-import type { Sighting, SightingFilter } from "@runo-map/shared";
+import { buildSpeciesStats, type Sighting, type SightingFilter } from "@runo-map/shared";
 import type { PrismaClient, Sighting as SightingRow } from "./generated/prisma/client.js";
 import type { Store } from "./store.js";
 
@@ -37,6 +37,15 @@ export function createPrismaStore(prisma: PrismaClient): Store {
     },
     async add(input) {
       return toSighting(await prisma.sighting.create({ data: input }));
+    },
+    async listSpeciesStats() {
+      const groups = await prisma.sighting.groupBy({
+        by: ["species"],
+        _count: { _all: true },
+      });
+      return buildSpeciesStats(
+        groups.map((group) => ({ species: group.species, count: group._count._all })),
+      );
     },
   };
 }

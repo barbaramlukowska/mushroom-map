@@ -1,11 +1,18 @@
 import { randomUUID } from "node:crypto";
-import type { Sighting, SightingFilter, SightingInput } from "@runo-map/shared";
+import {
+  buildSpeciesStats,
+  type Sighting,
+  type SightingFilter,
+  type SightingInput,
+  type SpeciesStat,
+} from "@runo-map/shared";
 
 // Async because production data lives behind the network (Prisma + PostgreSQL).
 export interface Store {
   list(filter?: SightingFilter): Promise<Sighting[]>;
   getById(id: string): Promise<Sighting | undefined>;
   add(input: SightingInput): Promise<Sighting>;
+  listSpeciesStats(): Promise<SpeciesStat[]>;
 }
 
 const inBbox = (s: Sighting, [minLng, minLat, maxLng, maxLat]: [number, number, number, number]) =>
@@ -37,6 +44,15 @@ export function createStore(seed: Sighting[] = []): Store {
       };
       sightings.push(sighting);
       return sighting;
+    },
+    // Global by design: counts ignore the map's current filters, so a species keeps
+    // its color and its place in the filter list as the map moves.
+    async listSpeciesStats(): Promise<SpeciesStat[]> {
+      const counts = new Map<string, number>();
+      for (const s of sightings) {
+        counts.set(s.species, (counts.get(s.species) ?? 0) + 1);
+      }
+      return buildSpeciesStats([...counts].map(([species, count]) => ({ species, count })));
     },
   };
 }

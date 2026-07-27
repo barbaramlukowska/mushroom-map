@@ -1,10 +1,11 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import type { Sighting } from "@runo-map/shared";
+import type { Sighting, SpeciesStat } from "@runo-map/shared";
 import { buildApiQuery, parseDaysParam, parseSpeciesParam } from "@/lib/filter-params";
+import { speciesColorMap, type PinMode } from "@/lib/species-colors";
 import { LoaderCircle } from "lucide-react";
 import { LOADING_BANNER_DELAY_MS, WAKING_THRESHOLD_MS, loadingStage, type LoadingStage } from "@/lib/loading-stage";
 import { ReportForm } from "./report-form";
@@ -37,6 +38,7 @@ const SightingsMap = dynamic(
 export function MapView() {
   const searchParams = useSearchParams();
   const [sightings, setSightings] = useState<Sighting[]>([]);
+  const [speciesColors, setSpeciesColors] = useState<Record<string, string>>({});
   const [fetchFailed, setFetchFailed] = useState(false);
   const [loadStage, setLoadStage] = useState<LoadingStage>("hidden");
   const [bbox, setBbox] = useState<string | null>(null);
@@ -46,13 +48,42 @@ export function MapView() {
   const handleBboxChange = useCallback((next: string) => setBbox(next), []);
   const handleReported = useCallback(() => setReloadKey((key) => key + 1), []);
 
+  // Memoized so the fetch effect below doesn't refire on every render.
+  const selectedSpecies = useMemo(
+    () => parseSpeciesParam(searchParams.getAll("species")),
+    [searchParams],
+  );
+  const mode: PinMode = selectedSpecies.length > 0 ? "species" : "age";
+
+  // Color assignments change only when a brand-new species is first reported, so
+  // this deliberately does not refetch on map movement — only on mount and after
+  // a report.
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/species-stats`, { signal: controller.signal })
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Bad response");
+        return (await res.json()) as SpeciesStat[];
+      })
+      .then((stats) => {
+        const next = speciesColorMap(stats);
+        // Keeping the previous object when nothing changed spares the map a full
+        // marker rebuild, which would restart the cluster animation.
+        setSpeciesColors((previous) =>
+          JSON.stringify(previous) === JSON.stringify(next) ? previous : next,
+        );
+      })
+      // Fail closed: no assignments means every pin stays in age mode.
+      .catch(() => setSpeciesColors({}));
+    return () => controller.abort();
+  }, [reloadKey]);
+
   useEffect(() => {
     // No fetch until the map reports its first bounds.
     if (bbox === null) return;
 
-    const species = parseSpeciesParam(searchParams.getAll("species"));
     const days = parseDaysParam(searchParams.get("days") ?? undefined);
-    const query = buildApiQuery(species, days, new Date(), bbox);
+    const query = buildApiQuery(selectedSpecies, days, new Date(), bbox);
 
     // Escalate the banner as the fetch drags on. Timers never fire early, so
     // each one can derive its stage straight from its own delay. The stage is
@@ -94,7 +125,7 @@ export function MapView() {
       controller.abort();
       clearStageTimers();
     };
-  }, [searchParams, bbox, reloadKey]);
+  }, [searchParams, selectedSpecies, bbox, reloadKey]);
 
   return (
     <>
@@ -121,6 +152,8 @@ export function MapView() {
       )}
       <SightingsMap
         sightings={sightings}
+        speciesColors={speciesColors}
+        mode={mode}
         onMapClick={setPendingLocation}
         onBboxChange={handleBboxChange}
       />

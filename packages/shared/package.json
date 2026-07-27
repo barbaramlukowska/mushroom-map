@@ -7,11 +7,13 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@runo-map/config": "workspace:*",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^4.1.10"
   },
   "dependencies": {
     "zod": "^4.4.3"

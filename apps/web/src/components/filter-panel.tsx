@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { SPECIES, SPECIES_LABELS, type Species } from "@runo-map/shared";
-import { SPECIES_COLORS } from "@/lib/species-colors";
+import { SPECIES, SPECIES_LABELS, type Species, type SpeciesStat } from "@runo-map/shared";
+import { speciesColorMap } from "@/lib/species-colors";
+import { sortSpeciesByReports } from "@/lib/species-order";
 import {
   DAY_PRESETS,
   buildPageQuery,
@@ -31,11 +32,31 @@ export function FilterPanel() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
+  const [stats, setStats] = useState<SpeciesStat[]>([]);
 
   // Desktop starts expanded; mobile stays collapsed so the map is visible.
   useEffect(() => {
     if (window.matchMedia("(min-width: 768px)").matches) setOpen(true);
   }, []);
+
+  // The map fetches this too; it is a sibling component, so the panel asks for
+  // its own copy — one row per reported species, served from the browser cache.
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/species-stats`, { signal: controller.signal })
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Bad response");
+        return (await res.json()) as SpeciesStat[];
+      })
+      .then(setStats)
+      // Fail closed: no stats means no dots and the original order, matching a
+      // map stuck in age mode.
+      .catch(() => setStats([]));
+    return () => controller.abort();
+  }, []);
+
+  const speciesColors = speciesColorMap(stats);
+  const orderedSpecies = sortSpeciesByReports(SPECIES, stats);
 
   const selected = parseSpeciesParam(searchParams.getAll("species"));
   const days = parseDaysParam(searchParams.get("days") ?? undefined);
@@ -115,7 +136,7 @@ export function FilterPanel() {
         <div className="border-t border-line/30">
           <fieldset>
             <legend className="px-4 pb-1 pt-3 text-label">Gatunki</legend>
-            {SPECIES.map((species) => {
+            {orderedSpecies.map((species) => {
               const isSelected = selected.includes(species);
               return (
                 <label
@@ -130,9 +151,12 @@ export function FilterPanel() {
                     checked={isSelected}
                     onCheckedChange={() => toggleSpecies(species)}
                   />
+                  {/* Slot stays even without a color, so every name lines up. */}
                   <span
                     className="h-3 w-3 shrink-0 rounded-full"
-                    style={{ background: SPECIES_COLORS[species] }}
+                    style={
+                      speciesColors[species] ? { background: speciesColors[species] } : undefined
+                    }
                   />
                   <span className="flex-1">
                     <span className="block text-xs font-medium leading-tight text-content">

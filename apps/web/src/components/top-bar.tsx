@@ -54,19 +54,19 @@ export function TopBar() {
           <div className="h-1.5 rounded-xs bg-linear-to-r from-fresh via-recent to-stale" />
           <div className="mt-1.5 flex justify-between text-xs font-light">
             <span className="text-content">Świeże — dziś</span>
-            <span className="text-content-soft">7 dni</span>
-            <span className="text-content-muted">14 dni</span>
+            <span className="text-content-soft">3 dni</span>
+            <span className="text-content-muted">tydzień</span>
             <span className="text-content-muted">starsze</span>
           </div>
           <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-xs font-light text-content">
             <span className="flex items-center gap-2">
-              <span className="h-3.5 w-3.5 rounded-full bg-fresh" /> Świeże (do 7 dni)
+              <span className="h-3.5 w-3.5 rounded-full bg-fresh" /> Świeże (do 3 dni)
             </span>
             <span className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-full bg-recent" /> Ostatnie (7–14 dni)
+              <span className="h-3 w-3 rounded-full bg-recent" /> Ostatnie (3–7 dni)
             </span>
             <span className="flex items-center gap-2">
-              <span className="h-2.5 w-2.5 rounded-full bg-stale" /> Starsze (14+ dni)
+              <span className="h-2.5 w-2.5 rounded-full bg-stale" /> Starsze (ponad tydzień)
             </span>
             <span className="flex items-center gap-2">
               <span className="flex h-4 w-4 items-center justify-center rounded-full bg-fresh text-[8px] font-semibold text-inverse">
@@ -75,6 +75,10 @@ export function TopBar() {
               Klaster — wiele zgłoszeń
             </span>
           </div>
+          <p className="mt-3 text-xs font-light text-content-soft">
+            Po wybraniu gatunku, kolor pinezki oznacza gatunek — ciemne to świeże zgłoszenia, blade
+            to starsze.
+          </p>
         </div>
       </div>
       </header>

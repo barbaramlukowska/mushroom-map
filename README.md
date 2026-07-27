@@ -95,6 +95,7 @@ The web app also needs `NEXT_PUBLIC_API_URL` (browser-side POST target) in `apps
 | GET | `/api/sightings` | list sightings; optional `species` (repeatable: `?species=KURKA&species=BOROWIK`), `from`, `to`, `bbox` filters |
 | GET | `/api/sightings/:id` | single sighting |
 | POST | `/api/sightings` | report a sighting (Zod-validated, rate-limited 10/h/IP) |
+| GET | `/api/species-stats` | per-species report counts, most-reported first; the leading four carry a pin colour from the 4-colour budget |
 | GET | `/api/health` | healthcheck |
 
 `bbox` takes `minLng,minLat,maxLng,maxLat` — the format Leaflet's `map.getBounds().toBBoxString()` produces, so the map can request only the visible area.

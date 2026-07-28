@@ -1,12 +1,23 @@
 "use client";
 
-import { useEffect } from "react";
-import { divIcon, type DivIcon } from "leaflet";
-import { MapContainer, Marker, TileLayer, ZoomControl, useMapEvents } from "react-leaflet";
+import { useCallback, useEffect, useState } from "react";
+import { DomEvent, divIcon, type DivIcon, type LatLng } from "leaflet";
+import {
+  Circle,
+  CircleMarker,
+  MapContainer,
+  Marker,
+  TileLayer,
+  ZoomControl,
+  useMapEvents,
+} from "react-leaflet";
 import type { OccurrenceCell } from "@runo-map/shared";
 import { cellAppearance } from "@/lib/cell-appearance";
 import { reportCountLabel } from "@/lib/report-count-label";
 import { buildTileUrl } from "@/lib/tile-url";
+import { COLOR } from "@/lib/tokens";
+import { locateErrorMessage } from "@/lib/locate-messages";
+import { LocateIcon } from "./icons/locate-icon";
 import "leaflet/dist/leaflet.css";
 
 const POLAND_CENTER: [number, number] = [52.0, 19.5];
@@ -64,6 +75,104 @@ function ViewHandler({
   return null;
 }
 
+type LocateStatus = "idle" | "locating" | "found" | "error";
+
+interface UserPosition {
+  latlng: LatLng;
+  accuracy: number;
+}
+
+// Locate button + "you are here" layer. Geolocation is for orientation only
+// ("which forest am I in") — reporting stays click-on-map, so all state is
+// local and the user's coordinates never leave the browser.
+function LocateControl() {
+  const [status, setStatus] = useState<LocateStatus>("idle");
+  const [position, setPosition] = useState<UserPosition | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const map = useMapEvents({
+    locationfound(e) {
+      setPosition({ latlng: e.latlng, accuracy: e.accuracy });
+      setStatus("found");
+    },
+    locationerror(e) {
+      setStatus("error");
+      setErrorMessage(locateErrorMessage(e.code));
+    },
+  });
+
+  useEffect(() => {
+    if (errorMessage === null) return;
+    const timer = setTimeout(() => setErrorMessage(null), 6000);
+    return () => clearTimeout(timer);
+  }, [errorMessage]);
+
+  // Leaflet listens for clicks on the map container itself, so React-level
+  // stopPropagation cannot keep a button click from also opening the report
+  // form — detach the wrapper from map interactions at the DOM level.
+  const detachFromMap = useCallback((element: HTMLDivElement | null) => {
+    if (element) DomEvent.disableClickPropagation(element);
+  }, []);
+
+  function handleLocateClick() {
+    setStatus("locating");
+    map.locate({ setView: true, maxZoom: 15, enableHighAccuracy: true, timeout: 10000 });
+  }
+
+  return (
+    <>
+      {position && (
+        <>
+          <Circle
+            center={position.latlng}
+            radius={position.accuracy}
+            pathOptions={{
+              color: COLOR.forestMid,
+              fillColor: COLOR.forestMid,
+              fillOpacity: 0.15,
+              weight: 1,
+            }}
+          />
+          <CircleMarker
+            center={position.latlng}
+            radius={7}
+            pathOptions={{
+              color: COLOR.cream,
+              fillColor: COLOR.forestMid,
+              fillOpacity: 1,
+              weight: 2,
+            }}
+          />
+        </>
+      )}
+      <div ref={detachFromMap} className="absolute bottom-28 right-2.5 z-modal">
+        <button
+          type="button"
+          onClick={handleLocateClick}
+          disabled={status === "locating"}
+          aria-label="Pokaż moją lokalizację"
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-line-strong bg-surface text-content shadow-md"
+        >
+          <LocateIcon
+            className={
+              status === "locating"
+                ? "animate-pulse"
+                : status === "found"
+                  ? "text-fill"
+                  : undefined
+            }
+          />
+        </button>
+      </div>
+      {errorMessage && (
+        <div className="fixed left-1/2 top-18 z-modal -translate-x-1/2 rounded-lg border border-line-strong bg-surface px-4 py-2 text-sm">
+          {errorMessage}
+        </div>
+      )}
+    </>
+  );
+}
+
 interface SightingsMapProps {
   cells: OccurrenceCell[];
   // The zoom the cells were aggregated at — drives the circle labels. Undefined
@@ -102,6 +211,7 @@ export function SightingsMap({
       <ZoomControl position="bottomright" />
       {onMapClick && <MapClickHandler onMapClick={onMapClick} />}
       {onViewChange && <ViewHandler onViewChange={onViewChange} />}
+      <LocateControl />
       {cells.map((cell) => (
         <Marker
           key={`${cell.lat}:${cell.lng}`}

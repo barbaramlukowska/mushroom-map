@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { SPECIES, SPECIES_LABELS, type Species } from "@runo-map/shared";
-import { SPECIES_COLORS } from "@/lib/species-colors";
+import { SPECIES, SPECIES_LABELS, type Species, type SpeciesStat } from "@runo-map/shared";
+import { reportCountLabel } from "@/lib/report-count-label";
+import { sortSpeciesByReports } from "@/lib/species-order";
 import {
   DAY_PRESETS,
   buildPageQuery,
@@ -25,17 +26,74 @@ const DAY_LABELS: Record<DayPreset, string> = {
 // z-index 500: above the map tiles (~400), below the top bar (600) and
 // modals (1000), clear of the bottom-right zoom control.
 
+// Below md both this panel and the cell panel are the same bottom sheet, so
+// only one of them can be on screen at a time.
+const MOBILE_QUERY = "(min-width: 768px)";
+
+interface FilterPanelProps {
+  // True while the cell panel occupies the bottom sheet.
+  cellPanelOpen?: boolean;
+  // Called when the user opens the filters on a screen where the two panels
+  // would share the slot, so the caller can close the cell panel.
+  onOpenOnMobile?: () => void;
+}
+
+function isSharedSlot() {
+  return !window.matchMedia(MOBILE_QUERY).matches;
+}
+
 // Disclosure panel (not a modal): the map behind it stays interactive.
-export function FilterPanel() {
+export function FilterPanel({ cellPanelOpen = false, onOpenOnMobile }: FilterPanelProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
+  const [stats, setStats] = useState<SpeciesStat[]>([]);
 
   // Desktop starts expanded; mobile stays collapsed so the map is visible.
   useEffect(() => {
-    if (window.matchMedia("(min-width: 768px)").matches) setOpen(true);
+    if (window.matchMedia(MOBILE_QUERY).matches) setOpen(true);
   }, []);
+
+  // Below md the two panels are the same sheet, so the arriving one wins and
+  // this one closes for real rather than hiding: a panel that is invisible but
+  // still "open" makes its own toggle button do nothing on the next tap.
+  useEffect(() => {
+    if (cellPanelOpen && isSharedSlot()) setOpen(false);
+  }, [cellPanelOpen]);
+
+  const toggleOpen = () => {
+    const next = !open;
+    setOpen(next);
+    // Opening the filters on a shared-slot screen takes the sheet back.
+    if (next && isSharedSlot()) onOpenOnMobile?.();
+  };
+
+  // The map fetches this too; it is a sibling component, so the panel asks for
+  // its own copy — one row per reported species, served from the browser cache.
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/species-stats`, { signal: controller.signal })
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Bad response");
+        return (await res.json()) as SpeciesStat[];
+      })
+      .then(setStats)
+      // Fail closed: no stats means no dots and the original order, matching a
+      // map stuck in age mode.
+      .catch(() => setStats([]));
+    return () => controller.abort();
+  }, []);
+
+  // The slot that used to hold a colour dot now holds the report count. The dot
+  // pointed at a species colour on the map, and after the switch to aggregated
+  // cells no mark on the map is coloured by species — a coloured dot would send
+  // people looking for circles that do not exist.
+  const countBySpecies = new Map(stats.map((stat) => [stat.species, stat.count]));
+  // Before the fetch lands there is no count to show. A hard 0 would be a false
+  // statement about the data, so the slot stays empty until stats arrive.
+  const hasStats = stats.length > 0;
+  const orderedSpecies = sortSpeciesByReports(SPECIES, stats);
 
   const selected = parseSpeciesParam(searchParams.getAll("species"));
   const days = parseDaysParam(searchParams.get("days") ?? undefined);
@@ -60,7 +118,7 @@ export function FilterPanel() {
         aria-expanded={open}
         aria-controls="filter-panel"
         className="fixed left-4 top-18 z-panel border-line/30 bg-surface/92 text-[13px] font-semibold text-content shadow-toggle backdrop-blur-lg hover:bg-surface/92 hover:text-content"
-        onClick={() => setOpen(!open)}
+        onClick={toggleOpen}
       >
         Filtry
       </Button>
@@ -115,7 +173,7 @@ export function FilterPanel() {
         <div className="border-t border-line/30">
           <fieldset>
             <legend className="px-4 pb-1 pt-3 text-label">Gatunki</legend>
-            {SPECIES.map((species) => {
+            {orderedSpecies.map((species) => {
               const isSelected = selected.includes(species);
               return (
                 <label
@@ -130,10 +188,6 @@ export function FilterPanel() {
                     checked={isSelected}
                     onCheckedChange={() => toggleSpecies(species)}
                   />
-                  <span
-                    className="h-3 w-3 shrink-0 rounded-full"
-                    style={{ background: SPECIES_COLORS[species] }}
-                  />
                   <span className="flex-1">
                     <span className="block text-xs font-medium leading-tight text-content">
                       {SPECIES_LABELS[species].pl}
@@ -142,6 +196,14 @@ export function FilterPanel() {
                       {SPECIES_LABELS[species].latin}
                     </span>
                   </span>
+                  {hasStats && (
+                    <span
+                      className="shrink-0 text-xs font-medium tabular-nums text-content-muted"
+                      aria-label={reportCountLabel(countBySpecies.get(species) ?? 0)}
+                    >
+                      {countBySpecies.get(species) ?? 0}
+                    </span>
+                  )}
                 </label>
               );
             })}

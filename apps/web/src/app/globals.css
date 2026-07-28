@@ -24,6 +24,18 @@
   --bark: #5c4033; /* brand palette; no semantic role yet */
   --red: #b3261e;
 
+  /* Map cell circles. Brown, not green: the map surface is green and cream
+     (forests, fields), so a green mark competes with the basemap — verified in
+     the design mockup, where green circles were read as background three times
+     in a row. Amber is out too: --color-action already means "clickable". */
+  --cell-fresh: #3f2a1d;
+  --cell-recent: #6b4a35;
+  --cell-stale: #c9b6a5;
+  --cell-ink-dark: #3f2a1d;
+  /* ONE outline for every circle regardless of size or fill — an outline that
+     changed with the fill reads as a third channel with no row in the legend. */
+  --cell-line: rgba(48, 32, 22, 0.55);
+
   --z-panel: 500;
   --z-topbar: 600;
   --z-modal: 1000;
@@ -73,6 +85,11 @@
   --color-fresh: var(--forest-mid);
   --color-recent: var(--forest-soft);
   --color-stale: var(--stone);
+  --color-cell-fresh: var(--cell-fresh);
+  --color-cell-recent: var(--cell-recent);
+  --color-cell-stale: var(--cell-stale);
+  --color-cell-ink: var(--cell-ink-dark);
+  --color-cell-line: var(--cell-line);
 
   --shadow-toggle: 0 3px 10px rgba(45, 76, 59, 0.25);
   --shadow-panel: 0 8px 32px rgba(26, 60, 42, 0.15);

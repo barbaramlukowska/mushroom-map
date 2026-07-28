@@ -1,19 +1,27 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import type { Sighting } from "@runo-map/shared";
-import { buildApiQuery, parseDaysParam, parseSpeciesParam } from "@/lib/filter-params";
+import { cellStepForZoom, type OccurrenceCell } from "@runo-map/shared";
+import { buildCellsQuery, parseDaysParam, parseSpeciesParam, presetToFromParam } from "@/lib/filter-params";
 import { LoaderCircle } from "lucide-react";
 import { LOADING_BANNER_DELAY_MS, WAKING_THRESHOLD_MS, loadingStage, type LoadingStage } from "@/lib/loading-stage";
+import { CellDetails } from "./cell-details";
+import { FilterPanel } from "./filter-panel";
 import { ReportForm } from "./report-form";
 
-// Sightings are immutable once reported, so the id list fully identifies a
-// result set.
-function sameSightings(a: Sighting[], b: Sighting[]): boolean {
+// Cells have no ids — the whole set is derived from the current filter — so a
+// cheap value comparison replaces the old id-list check.
+function sameCells(a: OccurrenceCell[], b: OccurrenceCell[]): boolean {
   if (a.length !== b.length) return false;
-  return a.every((sighting, index) => sighting.id === b[index].id);
+  return a.every(
+    (cell, index) =>
+      cell.lat === b[index].lat &&
+      cell.lng === b[index].lng &&
+      cell.count === b[index].count &&
+      cell.newestFoundAt === b[index].newestFoundAt,
+  );
 }
 
 // Leaflet touches `window` on import, so the map must never render on the server.
@@ -30,29 +38,50 @@ const SightingsMap = dynamic(
 );
 
 // Owns the sightings data: fetches client-side whenever filters (URL) or the
-// visible map area (bbox) change, plus after a new report. Old pins stay on
+// visible map area (bbox) change, plus after a new report. Old cells stay on
 // screen during a refetch (stale-while-revalidate); a separate error flag keeps
 // the initial "not loaded yet" state from rendering the error banner.
 // A staged loading banner (see lib/loading-stage.ts) covers slow fetches during Render cold starts.
 export function MapView() {
   const searchParams = useSearchParams();
-  const [sightings, setSightings] = useState<Sighting[]>([]);
+  const [cells, setCells] = useState<OccurrenceCell[]>([]);
   const [fetchFailed, setFetchFailed] = useState(false);
   const [loadStage, setLoadStage] = useState<LoadingStage>("hidden");
-  const [bbox, setBbox] = useState<string | null>(null);
+  const [view, setView] = useState<{ bbox: string; zoom: number } | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const [pendingLocation, setPendingLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [openCell, setOpenCell] = useState<OccurrenceCell | null>(null);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
-  const handleBboxChange = useCallback((next: string) => setBbox(next), []);
+  // Zero cells after a successful fetch is a real answer, not a failure — but a
+  // blank map reads as one, so it has to be said out loud. `hasLoadedOnce` guards
+  // against the cold-load flash: the loading banner is deliberately delayed, so
+  // `loadStage` stays "hidden" for the first stretch of every fetch, and without
+  // this guard the empty banner would show before any response has landed.
+  const isEmpty =
+    !fetchFailed && loadStage === "hidden" && view !== null && cells.length === 0 && hasLoadedOnce;
+
+  const handleViewChange = useCallback((next: { bbox: string; zoom: number }) => setView(next), []);
   const handleReported = useCallback(() => setReloadKey((key) => key + 1), []);
 
-  useEffect(() => {
-    // No fetch until the map reports its first bounds.
-    if (bbox === null) return;
+  // Memoized so the fetch effect below doesn't refire on every render.
+  const selectedSpecies = useMemo(
+    () => parseSpeciesParam(searchParams.getAll("species")),
+    [searchParams],
+  );
 
-    const species = parseSpeciesParam(searchParams.getAll("species"));
+  // A cell only exists relative to a filter and a zoom. When either changes the
+  // open panel would describe a circle that is no longer on the map.
+  useEffect(() => {
+    setOpenCell(null);
+  }, [searchParams, view?.zoom]);
+
+  useEffect(() => {
+    // No fetch until the map reports its first bounds and zoom.
+    if (view === null) return;
+
     const days = parseDaysParam(searchParams.get("days") ?? undefined);
-    const query = buildApiQuery(species, days, new Date(), bbox);
+    const query = buildCellsQuery(selectedSpecies, days, new Date(), view.bbox, view.zoom);
 
     // Escalate the banner as the fetch drags on. Timers never fire early, so
     // each one can derive its stage straight from its own delay. The stage is
@@ -68,19 +97,17 @@ export function MapView() {
     // Abort the previous in-flight request before starting the next one so
     // rapid map movement can't land results out of order.
     const controller = new AbortController();
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/sightings?${query}`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/occurrence-cells?${query}`, {
       signal: controller.signal,
     })
       .then(async (res) => {
         if (!res.ok) throw new Error("Bad response");
-        const data = (await res.json()) as Sighting[];
+        const data = (await res.json()) as OccurrenceCell[];
         clearStageTimers();
         setLoadStage("hidden");
-        // Keeping the previous array when the result set is unchanged (common
-        // when zooming inside an already-loaded area) spares the map a marker
-        // rebuild, which would restart the cluster animation.
-        setSightings((previous) => (sameSightings(previous, data) ? previous : data));
+        setCells((previous) => (sameCells(previous, data) ? previous : data));
         setFetchFailed(false);
+        setHasLoadedOnce(true);
       })
       .catch((error) => {
         // Aborts are expected during rapid movement — not an API failure.
@@ -94,7 +121,7 @@ export function MapView() {
       controller.abort();
       clearStageTimers();
     };
-  }, [searchParams, bbox, reloadKey]);
+  }, [searchParams, selectedSpecies, view, reloadKey]);
 
   return (
     <>
@@ -119,11 +146,40 @@ export function MapView() {
           Nie udało się pobrać zgłoszeń — sprawdź, czy API działa.
         </div>
       )}
+      {isEmpty && (
+        <div
+          role="status"
+          className="fixed left-1/2 top-18 z-modal max-w-[90vw] -translate-x-1/2 rounded-lg border border-line-strong bg-surface px-4 py-2 text-center text-sm text-content"
+        >
+          Brak zgłoszeń w tym obszarze i okresie. Poszerz zakres czasu albo oddal mapę.
+        </div>
+      )}
       <SightingsMap
-        sightings={sightings}
+        cells={cells}
+        // The zoom the cells were fetched at, so the circles are drawn for the
+        // grid they actually describe. Undefined until the map reports its first
+        // view, and there are no cells to draw before that.
+        zoom={view?.zoom}
+        onCellClick={setOpenCell}
         onMapClick={setPendingLocation}
-        onBboxChange={handleBboxChange}
+        onViewChange={handleViewChange}
       />
+      {/* Rendered here, not beside MapView, because below md it and the cell
+          panel are the same bottom sheet and one of them has to stand down. */}
+      <FilterPanel cellPanelOpen={openCell !== null} onOpenOnMobile={() => setOpenCell(null)} />
+      {openCell && view && (
+        <CellDetails
+          cell={openCell}
+          step={cellStepForZoom(view.zoom)}
+          species={selectedSpecies}
+          from={presetToFromParam(
+            parseDaysParam(searchParams.get("days") ?? undefined),
+            new Date(),
+          )}
+          viewportBbox={view.bbox}
+          onClose={() => setOpenCell(null)}
+        />
+      )}
       {pendingLocation && (
         <ReportForm
           location={pendingLocation}

@@ -57,6 +57,46 @@ describe("token contrast (WCAG 2.2 AA text)", () => {
   });
 });
 
+// The number inside a circle is TEXT, so the bar is 4.5:1 (WCAG 2.2 SC 1.4.3) —
+// higher than the 3:1 that applied to the old graphical mushroom glyph.
+describe("cell number contrast (WCAG 2.2 AA text)", () => {
+  const AA = 4.5;
+
+  it.each([
+    ["cream on fresh cell", COLOR.cream, COLOR.cellFresh],
+    ["cream on recent cell", COLOR.cream, COLOR.cellRecent],
+    ["dark ink on stale cell", COLOR.cellInkDark, COLOR.cellStale],
+  ])("%s meets AA", (_label, ink, fill) => {
+    expect(contrast(ink, fill)).toBeGreaterThanOrEqual(AA);
+  });
+
+  // Why the palest step flips to dark ink instead of keeping cream everywhere.
+  it("cream on the stale cell fails AA (why the ink flips)", () => {
+    expect(contrast(COLOR.cream, COLOR.cellStale)).toBeLessThan(AA);
+  });
+});
+
+// Each step must be far enough from its neighbour in luminance to read as a
+// different step at a glance, not just to pass a contrast check against text.
+describe("cell fill ramp separation", () => {
+  it("gets lighter at every step", () => {
+    expect(luminance(COLOR.cellFresh)).toBeLessThan(luminance(COLOR.cellRecent));
+    expect(luminance(COLOR.cellRecent)).toBeLessThan(luminance(COLOR.cellStale));
+  });
+
+  it("keeps every adjacent pair at 1.6:1 or better", () => {
+    expect(contrast(COLOR.cellFresh, COLOR.cellRecent)).toBeGreaterThanOrEqual(1.6);
+    expect(contrast(COLOR.cellRecent, COLOR.cellStale)).toBeGreaterThanOrEqual(1.6);
+  });
+
+  // The circles sit on the map surface, so the palest one still needs to be
+  // visible against it — that is what the shared outline is for, but the fill
+  // must not be effectively invisible either.
+  it("keeps the palest fill distinguishable from the map surface", () => {
+    expect(contrast(COLOR.cellStale, COLOR.creamDim)).toBeGreaterThanOrEqual(1.15);
+  });
+});
+
 describe("reduced-opacity text contrast (WCAG 2.2 AA)", () => {
   const AA = 4.5;
 

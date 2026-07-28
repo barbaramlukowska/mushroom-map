@@ -13,7 +13,7 @@ export const sightingInputSchema = z.object({
 export type SightingInput = z.infer<typeof sightingInputSchema>;
 
 // "minLng,minLat,maxLng,maxLat" — the order Leaflet's map.getBounds().toBBoxString() emits.
-const bboxSchema = z
+export const bboxSchema = z
   .string()
   .regex(/^-?\d+(\.\d+)?(,-?\d+(\.\d+)?){3}$/, "Expected bbox as minLng,minLat,maxLng,maxLat")
   .transform((value) => value.split(",").map(Number) as [number, number, number, number])

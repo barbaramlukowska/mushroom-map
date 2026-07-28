@@ -13,4 +13,12 @@ export const COLOR = {
   amber: "#b45309",
   bark: "#5c4033",
   red: "#b3261e",
+  cellFresh: "#3f2a1d",
+  cellRecent: "#6b4a35",
+  cellStale: "#c9b6a5",
+  cellInkDark: "#3f2a1d",
 } as const;
+
+// Not part of COLOR because it is not an opaque hex — the contrast helpers in
+// tokens.test.ts only handle 6-digit hex values.
+export const CELL_OUTLINE = "rgba(48, 32, 22, 0.55)";

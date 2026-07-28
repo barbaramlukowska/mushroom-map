@@ -38,8 +38,9 @@ export function AboutModal({ open, onOpenChange }: AboutModalProps) {
             <span className="font-semibold">Filtruj</span> — po gatunku i dacie znalezienia.
           </p>
           <p>
-            <span className="font-semibold">Świeżość</span> — ciemne pinezki to świeże zgłoszenia,
-            blade to starsze.
+            Mapa grupuje zgłoszenia w obszary. W kółku wpisana jest liczba zgłoszeń, a jego
+            kolor mówi, jak dawno było ostatnie: ciemne to świeże, blade to starsze.
+            Kliknij kółko, żeby zobaczyć poszczególne zgłoszenia.
           </p>
         </div>
       </DialogContent>

@@ -45,39 +45,33 @@ export function TopBar() {
         </div>
       </div>
 
-      {/* Disclosure legend expanding from the bar; colors match the map pins. */}
+      {/* Disclosure legend expanding from the bar; colors match the map circles. */}
       <div id="legend-panel" hidden={!legendOpen} className="border-t border-line/30 px-6 py-4">
-        <div className="mx-auto max-w-3xl">
-          <p className="mb-3 text-xs font-medium uppercase tracking-widest text-content-muted">
-            Wiek zgłoszenia
+        <div className="mx-auto flex max-w-3xl flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-light text-content">
+            <span className="text-xs font-medium uppercase tracking-widest text-content-muted">
+              Ostatnie zgłoszenie
+            </span>
+            <span className="flex items-center gap-2">
+              <span className="h-3.5 w-3.5 rounded-full border-2 border-cell-line bg-cell-fresh" />
+              do 3 dni
+            </span>
+            <span className="flex items-center gap-2">
+              <span className="h-3.5 w-3.5 rounded-full border-2 border-cell-line bg-cell-recent" />
+              3–7 dni
+            </span>
+            <span className="flex items-center gap-2">
+              <span className="h-3.5 w-3.5 rounded-full border-2 border-cell-line bg-cell-stale" />
+              dawniej
+            </span>
+          </div>
+          <p className="text-xs font-light text-content-soft">
+            Brak kółka — nikt nic tu nie zgłosił w tym obszarze i w tym okresie. Nie znaczy to, że
+            grzybów tam nie ma.
           </p>
-          <div className="h-1.5 rounded-xs bg-linear-to-r from-fresh via-recent to-stale" />
-          <div className="mt-1.5 flex justify-between text-xs font-light">
-            <span className="text-content">Świeże — dziś</span>
-            <span className="text-content-soft">3 dni</span>
-            <span className="text-content-muted">tydzień</span>
-            <span className="text-content-muted">starsze</span>
-          </div>
-          <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-xs font-light text-content">
-            <span className="flex items-center gap-2">
-              <span className="h-3.5 w-3.5 rounded-full bg-fresh" /> Świeże (do 3 dni)
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-full bg-recent" /> Ostatnie (3–7 dni)
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="h-2.5 w-2.5 rounded-full bg-stale" /> Starsze (ponad tydzień)
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-fresh text-[8px] font-semibold text-inverse">
-                12
-              </span>
-              Klaster — wiele zgłoszeń
-            </span>
-          </div>
-          <p className="mt-3 text-xs font-light text-content-soft">
-            Po wybraniu gatunku, kolor pinezki oznacza gatunek — ciemne to świeże zgłoszenia, blade
-            to starsze.
+          <p className="text-xs font-light text-content-muted">
+            Mapa pokazuje, gdzie ludzie zgłaszają grzyby, a nie gdzie grzyby rosną — przy
+            popularnych szlakach zgłoszeń jest więcej, bo więcej osób tam chodzi.
           </p>
         </div>
       </div>

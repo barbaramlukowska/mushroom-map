@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import request from "supertest";
-import { SPECIES_COLOR_PALETTE } from "@runo-map/shared";
 import { createApp } from "./app.js";
 import { createStore } from "./store.js";
 
@@ -102,14 +101,22 @@ describe("GET /api/sightings/:id", () => {
 });
 
 describe("GET /api/species-stats", () => {
-  it("responds 200 with one entry per seeded species, colored by report count", async () => {
+  it("responds 200 with one entry per seeded species", async () => {
     const res = await request(createApp()).get("/api/species-stats");
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual([
-      { species: "BOROWIK", count: 1, color: SPECIES_COLOR_PALETTE[0] },
-      { species: "KURKA", count: 1, color: SPECIES_COLOR_PALETTE[1] },
+      { species: "BOROWIK", count: 1 },
+      { species: "KURKA", count: 1 },
     ]);
+  });
+
+  it("no longer serves a color field", async () => {
+    const res = await request(createApp()).get("/api/species-stats");
+
+    for (const stat of res.body) {
+      expect(stat).not.toHaveProperty("color");
+    }
   });
 
   it("responds with an empty list when nothing has been reported", async () => {
@@ -135,10 +142,10 @@ describe("GET /api/species-stats", () => {
     expect(res.body[0]).toMatchObject({ species: "MASLAK", count: 2 });
   });
 
-  it("moves the leading color to a species that overtakes on count", async () => {
+  it("moves the leading spot to a species that overtakes on count", async () => {
     const app = createApp();
-    const colorOf = (body: { species: string; color?: string }[], species: string) =>
-      body.find((s) => s.species === species)?.color;
+    const countOf = (body: { species: string; count: number }[], species: string) =>
+      body.find((s) => s.species === species)?.count;
 
     for (let i = 0; i < 3; i++) {
       await request(app).post("/api/sightings").send({
@@ -150,8 +157,9 @@ describe("GET /api/species-stats", () => {
     }
     const res = await request(app).get("/api/species-stats");
 
-    expect(colorOf(res.body, "MASLAK")).toBe(SPECIES_COLOR_PALETTE[0]);
-    expect(colorOf(res.body, "BOROWIK")).toBe(SPECIES_COLOR_PALETTE[1]);
+    expect(res.body[0].species).toBe("MASLAK");
+    expect(countOf(res.body, "MASLAK")).toBe(3);
+    expect(countOf(res.body, "BOROWIK")).toBe(1);
   });
 });
 
@@ -268,6 +276,9 @@ describe("error handling", () => {
       listSpeciesStats() {
         throw new Error("db exploded");
       },
+      listOccurrenceCells() {
+        throw new Error("db exploded");
+      },
     };
     const app = createApp(brokenStore);
 
@@ -344,5 +355,112 @@ describe("CORS", () => {
 
     expect(res.status).toBe(204);
     expect(res.headers["access-control-allow-origin"]).toBe("http://localhost:3000");
+  });
+});
+
+describe("GET /api/occurrence-cells", () => {
+  const base = {
+    species: "BOROWIK" as const,
+    foundAt: "2026-07-20T00:00:00.000Z",
+    createdAt: "2026-07-20T10:00:00.000Z",
+  };
+
+  it("responds 200 with aggregated cells", async () => {
+    const app = createApp(
+      createStore([
+        { ...base, id: "a", lat: 52.0, lng: 21.0 },
+        { ...base, id: "b", lat: 52.03, lng: 21.03 },
+      ]),
+    );
+
+    const res = await request(app).get("/api/occurrence-cells?zoom=9");
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0]).toMatchObject({
+      lat: expect.any(Number),
+      lng: expect.any(Number),
+      count: 2,
+      newestFoundAt: "2026-07-20T00:00:00.000Z",
+    });
+  });
+
+  it("never returns individual sighting ids or comments", async () => {
+    const app = createApp(
+      createStore([{ ...base, id: "secret-id", lat: 52.0, lng: 21.0, comment: "przy leśniczówce" }]),
+    );
+
+    const res = await request(app).get("/api/occurrence-cells?zoom=9");
+
+    expect(Object.keys(res.body[0]).sort()).toEqual(["count", "lat", "lng", "newestFoundAt"]);
+  });
+
+  it("splits into more cells at a deeper zoom", async () => {
+    const store = createStore([
+      { ...base, id: "a", lat: 52.0, lng: 21.0 },
+      { ...base, id: "b", lat: 52.09, lng: 21.0 },
+    ]);
+
+    const coarse = await request(createApp(store)).get("/api/occurrence-cells?zoom=5");
+    const fine = await request(createApp(store)).get("/api/occurrence-cells?zoom=9");
+
+    expect(coarse.body).toHaveLength(1);
+    expect(fine.body).toHaveLength(2);
+  });
+
+  it("filters by species before aggregating", async () => {
+    const app = createApp(
+      createStore([
+        { ...base, id: "a", lat: 52.0, lng: 21.0, species: "BOROWIK" },
+        { ...base, id: "b", lat: 52.03, lng: 21.03, species: "KURKA" },
+      ]),
+    );
+
+    const res = await request(app).get("/api/occurrence-cells?zoom=9&species=BOROWIK");
+
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0].count).toBe(1);
+  });
+
+  it("accepts a repeated species param", async () => {
+    const app = createApp(
+      createStore([
+        { ...base, id: "a", lat: 52.0, lng: 21.0, species: "BOROWIK" },
+        { ...base, id: "b", lat: 52.03, lng: 21.03, species: "KURKA" },
+        { ...base, id: "c", lat: 52.04, lng: 21.04, species: "MASLAK" },
+      ]),
+    );
+
+    const res = await request(app).get(
+      "/api/occurrence-cells?zoom=9&species=BOROWIK&species=KURKA",
+    );
+
+    expect(res.body[0].count).toBe(2);
+  });
+
+  it("responds 400 when zoom is missing", async () => {
+    const res = await request(createApp()).get("/api/occurrence-cells");
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe("Invalid input");
+    expect(Array.isArray(res.body.issues)).toBe(true);
+  });
+
+  it("responds 400 for an out-of-range zoom", async () => {
+    const res = await request(createApp()).get("/api/occurrence-cells?zoom=99");
+
+    expect(res.status).toBe(400);
+  });
+
+  it("responds 400 for an unknown species", async () => {
+    const res = await request(createApp()).get("/api/occurrence-cells?zoom=9&species=MUCHOMOR");
+
+    expect(res.status).toBe(400);
+  });
+
+  it("responds 400 for a malformed bbox", async () => {
+    const res = await request(createApp()).get("/api/occurrence-cells?zoom=9&bbox=14,49");
+
+    expect(res.status).toBe(400);
   });
 });

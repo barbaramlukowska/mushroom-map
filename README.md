@@ -2,7 +2,7 @@
 
 *Runo — Polish for the forest floor harvest: mushrooms, berries, and everything you forage.*
 
-> Work in progress — **Stage 3 (map UI) complete**: full-screen map with clustered, age-faded pins backed by the real API, a multi-select filter panel, a sighting form, and a Tailwind CSS v4 design-token system (WCAG AA contrast). Deploy + CI (Stage 3.5) up next. This README grows with the project.
+> Work in progress — **Stage 3 (map UI) complete**: full-screen map with aggregated occurrence areas backed by the real API — one circle per grid cell, the report count inside it, the fill showing how recent the newest report is — a multi-select filter panel, a sighting form, and a Tailwind CSS v4 design-token system (WCAG AA contrast). Deploy + CI (Stage 3.5) up next. This README grows with the project.
 
 A community map of mushroom sightings in Poland. Users anonymously report finds (species, date, approximate location) and browse what others have found nearby — a *give-to-get* model for mushroom pickers.
 
@@ -95,7 +95,8 @@ The web app also needs `NEXT_PUBLIC_API_URL` (browser-side POST target) in `apps
 | GET | `/api/sightings` | list sightings; optional `species` (repeatable: `?species=KURKA&species=BOROWIK`), `from`, `to`, `bbox` filters |
 | GET | `/api/sightings/:id` | single sighting |
 | POST | `/api/sightings` | report a sighting (Zod-validated, rate-limited 10/h/IP) |
-| GET | `/api/species-stats` | per-species report counts, most-reported first; the leading four carry a pin colour from the 4-colour budget |
+| GET | `/api/occurrence-cells` | aggregated occurrence areas for the map; required `zoom` (sets the grid step), optional `species` (repeatable), `from`, `to`, `bbox` |
+| GET | `/api/species-stats` | per-species report counts, most-reported first; drives the order of the filter list |
 | GET | `/api/health` | healthcheck |
 
 `bbox` takes `minLng,minLat,maxLng,maxLat` — the format Leaflet's `map.getBounds().toBBoxString()` produces, so the map can request only the visible area.
@@ -109,7 +110,7 @@ The swap in Stage 2 didn't change a single route.
 - [x] **Stage 0** — Turborepo + pnpm scaffold, shared package wired into both apps
 - [x] **Stage 1** — Express API with in-memory data, tests from day one
 - [x] **Stage 2** — PostgreSQL (Supabase) + Prisma migrations, seed, store swap
-- [x] **Stage 3** — Map UI: react-leaflet, clustering, filters, freshness fading, sighting form, Tailwind design system
+- [x] **Stage 3** — Map UI: react-leaflet, aggregated occurrence areas, filters, freshness fading, sighting form, Tailwind design system
 - [ ] **Stage 3.5** — Deploy (Vercel + Render) and CI (GitHub Actions)
 - [ ] **Stage 4** — AI assistant with tool calling (sightings + weather)
 

@@ -32,15 +32,19 @@ export function presetToFromParam(days: DayPreset, now: Date): string | undefine
   return from.toISOString();
 }
 
-// Query string MapView forwards to GET /api/sightings. bbox is the visible map
-// area (Leaflet's toBBoxString); null before the map reports its first bounds.
-export function buildApiQuery(
+// Query string MapView forwards to GET /api/occurrence-cells. bbox is the visible
+// map area (Leaflet's toBBoxString); null before the map reports its first bounds.
+// zoom is always sent: the server derives the grid step from it and refuses a
+// request without one, so a circle can never silently change meaning.
+export function buildCellsQuery(
   species: Species[],
   days: DayPreset,
   now: Date,
   bbox: string | null,
+  zoom: number,
 ): string {
   const params = new URLSearchParams();
+  params.set("zoom", String(zoom));
   for (const s of species) params.append("species", s);
   const from = presetToFromParam(days, now);
   if (from) params.set("from", from);

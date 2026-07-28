@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SPECIES_COLOR_BUDGET, SPECIES_COLOR_PALETTE, type Sighting } from "@runo-map/shared";
+import { type Sighting } from "@runo-map/shared";
 import { createStore } from "./store.js";
 
 function sighting(overrides: Partial<Sighting> & Pick<Sighting, "id" | "species">): Sighting {
@@ -33,19 +33,6 @@ describe("listSpeciesStats", () => {
     ]);
   });
 
-  it("gives the palette to the most reported species", async () => {
-    const store = createStore([
-      sighting({ id: "1", species: "KURKA" }),
-      sighting({ id: "2", species: "KURKA" }),
-      sighting({ id: "3", species: "BOROWIK" }),
-    ]);
-
-    const result = await store.listSpeciesStats();
-
-    expect(result.find((s) => s.species === "KURKA")?.color).toBe(SPECIES_COLOR_PALETTE[0]);
-    expect(result.find((s) => s.species === "BOROWIK")?.color).toBe(SPECIES_COLOR_PALETTE[1]);
-  });
-
   it("ignores when a species was first reported", async () => {
     const store = createStore([
       sighting({ id: "1", species: "BOROWIK", createdAt: "2026-06-01T00:00:00.000Z" }),
@@ -58,21 +45,84 @@ describe("listSpeciesStats", () => {
     expect(result[0].species).toBe("KURKA");
   });
 
-  it("caps colors at the palette size, leaving the rest colorless", async () => {
-    const species = ["BOROWIK", "PODGRZYBEK", "KURKA", "MASLAK", "KOZLARZ", "RYDZ"] as const;
-    const store = createStore(
-      // Descending counts: BOROWIK 6 sightings, PODGRZYBEK 5, ... RYDZ 1.
-      species.flatMap((s, i) =>
-        Array.from({ length: species.length - i }, (_, n) =>
-          sighting({ id: `${s}-${n}`, species: s }),
-        ),
-      ),
+});
+
+describe("listOccurrenceCells", () => {
+  const base = {
+    species: "BOROWIK" as const,
+    foundAt: "2026-07-20T00:00:00.000Z",
+    createdAt: "2026-07-20T10:00:00.000Z",
+  };
+
+  it("returns an empty list when there are no sightings", async () => {
+    const store = createStore([]);
+
+    expect(await store.listOccurrenceCells({}, 0.08)).toEqual([]);
+  });
+
+  it("groups sightings inside one step into a single cell", async () => {
+    const store = createStore([
+      { ...base, id: "a", lat: 52.0, lng: 21.0 },
+      { ...base, id: "b", lat: 52.03, lng: 21.03 },
+    ]);
+
+    const cells = await store.listOccurrenceCells({}, 0.08);
+
+    expect(cells).toHaveLength(1);
+    expect(cells[0].count).toBe(2);
+  });
+
+  it("applies the species filter before aggregating", async () => {
+    const store = createStore([
+      { ...base, id: "a", lat: 52.0, lng: 21.0, species: "BOROWIK" },
+      { ...base, id: "b", lat: 52.03, lng: 21.03, species: "KURKA" },
+    ]);
+
+    const cells = await store.listOccurrenceCells({ species: ["BOROWIK"] }, 0.08);
+
+    expect(cells).toHaveLength(1);
+    expect(cells[0].count).toBe(1);
+  });
+
+  it("drops a cell entirely when the filter removes all its sightings", async () => {
+    const store = createStore([{ ...base, id: "a", lat: 52.0, lng: 21.0, species: "KURKA" }]);
+
+    expect(await store.listOccurrenceCells({ species: ["BOROWIK"] }, 0.08)).toEqual([]);
+  });
+
+  it("applies the date filter before aggregating", async () => {
+    const store = createStore([
+      { ...base, id: "old", lat: 52.0, lng: 21.0, foundAt: "2026-07-01T00:00:00.000Z" },
+      { ...base, id: "new", lat: 52.0, lng: 21.0, foundAt: "2026-07-25T00:00:00.000Z" },
+    ]);
+
+    const cells = await store.listOccurrenceCells({ from: "2026-07-20T00:00:00.000Z" }, 0.08);
+
+    expect(cells[0].count).toBe(1);
+    expect(cells[0].newestFoundAt).toBe("2026-07-25T00:00:00.000Z");
+  });
+
+  it("applies the bbox filter before aggregating", async () => {
+    const store = createStore([
+      { ...base, id: "inside", lat: 52.0, lng: 21.0 },
+      { ...base, id: "outside", lat: 49.5, lng: 15.0 },
+    ]);
+
+    const cells = await store.listOccurrenceCells(
+      { bbox: [20.5, 51.5, 21.5, 52.5] },
+      0.08,
     );
 
-    const result = await store.listSpeciesStats();
+    expect(cells).toHaveLength(1);
+  });
 
-    expect(result).toHaveLength(species.length);
-    expect(result.filter((s) => s.color)).toHaveLength(SPECIES_COLOR_BUDGET);
-    expect(result.find((s) => s.species === "RYDZ")?.color).toBeUndefined();
+  it("returns fewer cells at a coarser step", async () => {
+    const store = createStore([
+      { ...base, id: "a", lat: 52.0, lng: 21.0 },
+      { ...base, id: "b", lat: 52.09, lng: 21.0 },
+    ]);
+
+    expect(await store.listOccurrenceCells({}, 0.08)).toHaveLength(2);
+    expect(await store.listOccurrenceCells({}, 0.32)).toHaveLength(1);
   });
 });

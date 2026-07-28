@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  buildApiQuery,
+  buildCellsQuery,
   buildPageQuery,
   parseDaysParam,
   parseSpeciesParam,
@@ -71,43 +71,6 @@ describe("presetToFromParam", () => {
   });
 });
 
-describe("buildApiQuery", () => {
-  it("is empty without active filters and no bbox", () => {
-    expect(buildApiQuery([], "all", now, null)).toBe("");
-  });
-
-  it("repeats species and converts the day preset to from", () => {
-    const query = new URLSearchParams(buildApiQuery(["BOROWIK", "KURKA"], 7, now, null));
-
-    expect(query.getAll("species")).toEqual(["BOROWIK", "KURKA"]);
-    expect(query.get("from")).toBe("2026-07-08T00:00:00.000Z");
-    expect(query.has("days")).toBe(false);
-  });
-
-  it("appends bbox when present", () => {
-    const query = new URLSearchParams(
-      buildApiQuery([], "all", now, "19.0,52.0,20.0,53.0"),
-    );
-
-    expect(query.get("bbox")).toBe("19.0,52.0,20.0,53.0");
-  });
-
-  it("omits bbox when null", () => {
-    const query = new URLSearchParams(buildApiQuery([], "all", now, null));
-
-    expect(query.has("bbox")).toBe(false);
-  });
-
-  it("combines bbox with species and from", () => {
-    const query = new URLSearchParams(
-      buildApiQuery(["BOROWIK"], 7, now, "19.0,52.0,20.0,53.0"),
-    );
-
-    expect(query.getAll("species")).toEqual(["BOROWIK"]);
-    expect(query.get("from")).toBe("2026-07-08T00:00:00.000Z");
-    expect(query.get("bbox")).toBe("19.0,52.0,20.0,53.0");
-  });
-});
 
 describe("buildPageQuery", () => {
   it("is empty for the default state", () => {
@@ -120,5 +83,41 @@ describe("buildPageQuery", () => {
     expect(query.getAll("species")).toEqual(["RYDZ"]);
     expect(query.get("days")).toBe("3");
     expect(query.has("from")).toBe(false);
+  });
+});
+
+describe("buildCellsQuery", () => {
+  const NOW = new Date("2026-07-28T12:00:00.000Z");
+
+  it("always sends the zoom — the server needs it to pick a grid step", () => {
+    const query = buildCellsQuery([], "all", NOW, "14,49,24,55", 9);
+
+    expect(new URLSearchParams(query).get("zoom")).toBe("9");
+  });
+
+  it("sends zoom 0 as a value, not as an omitted param", () => {
+    expect(new URLSearchParams(buildCellsQuery([], "all", NOW, null, 0)).get("zoom")).toBe("0");
+  });
+
+  it("repeats the species param once per selected species", () => {
+    const params = new URLSearchParams(
+      buildCellsQuery(["BOROWIK", "KURKA"], "all", NOW, null, 9),
+    );
+
+    expect(params.getAll("species")).toEqual(["BOROWIK", "KURKA"]);
+  });
+
+  it("turns a day preset into a from date", () => {
+    const params = new URLSearchParams(buildCellsQuery([], 3, NOW, null, 9));
+
+    expect(params.get("from")).toBe("2026-07-26T00:00:00.000Z");
+  });
+
+  it("omits from for the all preset", () => {
+    expect(new URLSearchParams(buildCellsQuery([], "all", NOW, null, 9)).has("from")).toBe(false);
+  });
+
+  it("omits bbox before the map reports its first bounds", () => {
+    expect(new URLSearchParams(buildCellsQuery([], "all", NOW, null, 9)).has("bbox")).toBe(false);
   });
 });

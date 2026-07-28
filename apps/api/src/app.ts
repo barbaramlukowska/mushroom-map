@@ -2,7 +2,12 @@ import express, { type Express, type NextFunction, type Request, type Response }
 import cors from "cors";
 import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
-import { sightingFilterSchema, sightingInputSchema } from "@runo-map/shared";
+import {
+  cellStepForZoom,
+  occurrenceCellFilterSchema,
+  sightingFilterSchema,
+  sightingInputSchema,
+} from "@runo-map/shared";
 import { roundCoord } from "./geo.js";
 import { demoSeed } from "./seed.js";
 import { createStore, type Store } from "./store.js";
@@ -40,8 +45,21 @@ export function createApp(store: Store = createStore(demoSeed)): Express {
     res.json(sighting);
   });
 
-  // Global (not per-view) so a species keeps its color and its rank in the filter
-  // list as the map moves. Ordered most-reported first.
+  // The map's main read: reports aggregated into grid cells, one circle per cell.
+  // The client sends its zoom, never a grid step — the step comes from the closed
+  // CELL_STEPS ladder, so no client value reaches the aggregation.
+  app.get("/api/occurrence-cells", async (req, res) => {
+    const parsed = occurrenceCellFilterSchema.safeParse(req.query);
+    if (!parsed.success) {
+      res.status(400).json({ error: "Invalid input", issues: parsed.error.issues });
+      return;
+    }
+    const { zoom, ...filter } = parsed.data;
+    res.json(await store.listOccurrenceCells(filter, cellStepForZoom(zoom)));
+  });
+
+  // Global (not per-view) so a species keeps its rank in the filter list as the
+  // map moves. Ordered most-reported first.
   app.get("/api/species-stats", async (_req, res) => {
     res.json(await store.listSpeciesStats());
   });

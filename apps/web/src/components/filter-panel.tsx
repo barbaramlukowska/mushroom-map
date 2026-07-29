@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { SPECIES, SPECIES_LABELS, type Species, type SpeciesStat } from "@runo-map/shared";
+import type { SpeciesRef, SpeciesStat } from "@runo-map/shared";
 import { reportCountLabel } from "@/lib/report-count-label";
-import { sortSpeciesByReports } from "@/lib/species-order";
+import { speciesLabel } from "@/lib/species-catalog";
 import {
   DAY_PRESETS,
   buildPageQuery,
@@ -31,6 +31,11 @@ const DAY_LABELS: Record<DayPreset, string> = {
 const MOBILE_QUERY = "(min-width: 768px)";
 
 interface FilterPanelProps {
+  // Reported species only, most-reported first — the API's order is the list order.
+  // Fetched by MapView so these rows and the map's filter cannot disagree.
+  stats: SpeciesStat[];
+  // Key -> names + protection flag.
+  lookup: Map<number, SpeciesRef>;
   // True while the cell panel occupies the bottom sheet.
   cellPanelOpen?: boolean;
   // Called when the user opens the filters on a screen where the two panels
@@ -43,12 +48,16 @@ function isSharedSlot() {
 }
 
 // Disclosure panel (not a modal): the map behind it stays interactive.
-export function FilterPanel({ cellPanelOpen = false, onOpenOnMobile }: FilterPanelProps) {
+export function FilterPanel({
+  stats,
+  lookup,
+  cellPanelOpen = false,
+  onOpenOnMobile,
+}: FilterPanelProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
-  const [stats, setStats] = useState<SpeciesStat[]>([]);
 
   // Desktop starts expanded; mobile stays collapsed so the map is visible.
   useEffect(() => {
@@ -69,44 +78,21 @@ export function FilterPanel({ cellPanelOpen = false, onOpenOnMobile }: FilterPan
     if (next && isSharedSlot()) onOpenOnMobile?.();
   };
 
-  // The map fetches this too; it is a sibling component, so the panel asks for
-  // its own copy — one row per reported species, served from the browser cache.
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/species-stats`, { signal: controller.signal })
-      .then(async (res) => {
-        if (!res.ok) throw new Error("Bad response");
-        return (await res.json()) as SpeciesStat[];
-      })
-      .then(setStats)
-      // Fail closed: no stats means no dots and the original order, matching a
-      // map stuck in age mode.
-      .catch(() => setStats([]));
-    return () => controller.abort();
-  }, []);
+  // Derived from the prop, not a fourth one: panel and map read the same array.
+  const reportedKeys = useMemo(() => new Set(stats.map((stat) => stat.speciesKey)), [stats]);
 
-  // The slot that used to hold a colour dot now holds the report count. The dot
-  // pointed at a species colour on the map, and after the switch to aggregated
-  // cells no mark on the map is coloured by species — a coloured dot would send
-  // people looking for circles that do not exist.
-  const countBySpecies = new Map(stats.map((stat) => [stat.species, stat.count]));
-  // Before the fetch lands there is no count to show. A hard 0 would be a false
-  // statement about the data, so the slot stays empty until stats arrive.
-  const hasStats = stats.length > 0;
-  const orderedSpecies = sortSpeciesByReports(SPECIES, stats);
-
-  const selected = parseSpeciesParam(searchParams.getAll("species"));
+  const selected = parseSpeciesParam(searchParams.getAll("speciesKey"), reportedKeys);
   const days = parseDaysParam(searchParams.get("days") ?? undefined);
 
-  const applyFilters = (species: Species[], nextDays: DayPreset) => {
-    const query = buildPageQuery(species, nextDays);
+  const applyFilters = (speciesKeys: number[], nextDays: DayPreset) => {
+    const query = buildPageQuery(speciesKeys, nextDays);
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   };
 
-  const toggleSpecies = (species: Species) => {
-    const next = selected.includes(species)
-      ? selected.filter((s) => s !== species)
-      : [...selected, species];
+  const toggleSpecies = (key: number) => {
+    const next = selected.includes(key)
+      ? selected.filter((selectedKey) => selectedKey !== key)
+      : [...selected, key];
     applyFilters(next, days);
   };
 
@@ -173,37 +159,49 @@ export function FilterPanel({ cellPanelOpen = false, onOpenOnMobile }: FilterPan
         <div className="border-t border-line/30">
           <fieldset>
             <legend className="px-4 pb-1 pt-3 text-label">Gatunki</legend>
-            {orderedSpecies.map((species) => {
-              const isSelected = selected.includes(species);
+            {/* Only reported species: filtering by one nobody reported could
+                only ever empty the map. The API already returns them
+                most-reported first, so this order needs no client-side sort. */}
+            {stats.length === 0 && (
+              <p className="px-4 pb-3 text-xs text-content-muted">
+                Nie ma jeszcze żadnych zgłoszeń.
+              </p>
+            )}
+            {stats.map((stat) => {
+              const ref = lookup.get(stat.speciesKey);
+              const isSelected = selected.includes(stat.speciesKey);
               return (
                 <label
-                  key={species}
-                  htmlFor={`species-${species}`}
+                  key={stat.speciesKey}
+                  htmlFor={`species-${stat.speciesKey}`}
                   className={`flex cursor-pointer items-center gap-3 border-b border-line/20 px-4 py-3 transition-colors last:border-b-0 ${
                     isSelected ? "bg-fill/10" : "hover:bg-fill/5"
                   }`}
                 >
                   <Checkbox
-                    id={`species-${species}`}
+                    id={`species-${stat.speciesKey}`}
                     checked={isSelected}
-                    onCheckedChange={() => toggleSpecies(species)}
+                    onCheckedChange={() => toggleSpecies(stat.speciesKey)}
                   />
                   <span className="flex-1">
                     <span className="block text-xs font-medium leading-tight text-content">
-                      {SPECIES_LABELS[species].pl}
+                      {speciesLabel(ref)}
                     </span>
-                    <span className="block text-latin">
-                      {SPECIES_LABELS[species].latin}
-                    </span>
+                    <span className="block text-latin">{ref?.scientificName ?? ""}</span>
                   </span>
-                  {hasStats && (
-                    <span
-                      className="shrink-0 text-xs font-medium tabular-nums text-content-muted"
-                      aria-label={reportCountLabel(countBySpecies.get(species) ?? 0)}
-                    >
-                      {countBySpecies.get(species) ?? 0}
+                  {ref?.isProtected && (
+                    <span className="shrink-0 rounded-full bg-fill/10 px-2 py-0.5 text-[10px] font-medium text-content-soft">
+                      pod ochroną
                     </span>
                   )}
+                  {/* Report count, never a species colour — no mark on the map is
+                      coloured by species, so a dot would point at nothing. */}
+                  <span
+                    className="shrink-0 text-xs font-medium tabular-nums text-content-muted"
+                    aria-label={reportCountLabel(stat.count)}
+                  >
+                    {stat.count}
+                  </span>
                 </label>
               );
             })}

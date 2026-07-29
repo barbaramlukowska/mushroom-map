@@ -3,8 +3,14 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { cellStepForZoom, type OccurrenceCell } from "@runo-map/shared";
+import {
+  cellStepForZoom,
+  type OccurrenceCell,
+  type SpeciesRef,
+  type SpeciesStat,
+} from "@runo-map/shared";
 import { buildCellsQuery, parseDaysParam, parseSpeciesParam, presetToFromParam } from "@/lib/filter-params";
+import { buildSpeciesLookup, fetchSpeciesCatalog } from "@/lib/species-catalog";
 import { LoaderCircle } from "lucide-react";
 import { LOADING_BANNER_DELAY_MS, WAKING_THRESHOLD_MS, loadingStage, type LoadingStage } from "@/lib/loading-stage";
 import { CellDetails } from "./cell-details";
@@ -52,6 +58,8 @@ export function MapView() {
   const [pendingLocation, setPendingLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [openCell, setOpenCell] = useState<OccurrenceCell | null>(null);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const [catalog, setCatalog] = useState<SpeciesRef[]>([]);
+  const [stats, setStats] = useState<SpeciesStat[]>([]);
 
   // Zero cells after a successful fetch is a real answer, not a failure — but a
   // blank map reads as one, so it has to be said out loud. `hasLoadedOnce` guards
@@ -64,10 +72,47 @@ export function MapView() {
   const handleViewChange = useCallback((next: { bbox: string; zoom: number }) => setView(next), []);
   const handleReported = useCallback(() => setReloadKey((key) => key + 1), []);
 
+  // Fills the report combobox. Fetched once — it only changes when the monthly
+  // refresh PR lands.
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchSpeciesCatalog(controller.signal)
+      // Fail closed: an empty catalogue makes the form refuse to submit (its
+      // default key of 0 fails validation) and leaves the map intact.
+      .catch(() => [] as SpeciesRef[])
+      .then(setCatalog);
+    return () => controller.abort();
+  }, []);
+
+  // Reported species only, most-reported first: drives the filter list and the
+  // keys a URL may select. Owned here, not in FilterPanel, so the visible list and
+  // the applied filter come from one array. Refetched on reloadKey so a
+  // first-time-reported species appears in the filters without a reload.
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/species-stats`, { signal: controller.signal })
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Bad response");
+        return (await res.json()) as SpeciesStat[];
+      })
+      .then(setStats)
+      .catch((error) => {
+        // A reloadKey bump aborts the in-flight request; blanking the list on
+        // that would wipe the filters for a moment after every new report.
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        // Fail closed: no stats means an empty filter list and no species filter.
+        setStats([]);
+      });
+    return () => controller.abort();
+  }, [reloadKey]);
+
+  const lookup = useMemo(() => buildSpeciesLookup(catalog), [catalog]);
+  const reportedKeys = useMemo(() => new Set(stats.map((stat) => stat.speciesKey)), [stats]);
+
   // Memoized so the fetch effect below doesn't refire on every render.
   const selectedSpecies = useMemo(
-    () => parseSpeciesParam(searchParams.getAll("species")),
-    [searchParams],
+    () => parseSpeciesParam(searchParams.getAll("speciesKey"), reportedKeys),
+    [searchParams, reportedKeys],
   );
 
   // A cell only exists relative to a filter and a zoom. When either changes the
@@ -166,12 +211,18 @@ export function MapView() {
       />
       {/* Rendered here, not beside MapView, because below md it and the cell
           panel are the same bottom sheet and one of them has to stand down. */}
-      <FilterPanel cellPanelOpen={openCell !== null} onOpenOnMobile={() => setOpenCell(null)} />
+      <FilterPanel
+        stats={stats}
+        lookup={lookup}
+        cellPanelOpen={openCell !== null}
+        onOpenOnMobile={() => setOpenCell(null)}
+      />
       {openCell && view && (
         <CellDetails
           cell={openCell}
           step={cellStepForZoom(view.zoom)}
-          species={selectedSpecies}
+          speciesKeys={selectedSpecies}
+          lookup={lookup}
           from={presetToFromParam(
             parseDaysParam(searchParams.get("days") ?? undefined),
             new Date(),
@@ -182,6 +233,7 @@ export function MapView() {
       )}
       {pendingLocation && (
         <ReportForm
+          catalog={catalog}
           location={pendingLocation}
           onClose={() => setPendingLocation(null)}
           onReported={handleReported}

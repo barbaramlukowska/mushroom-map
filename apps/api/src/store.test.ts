@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { type Sighting } from "@runo-map/shared";
+import { type Sighting, type SpeciesRef } from "@runo-map/shared";
 import { createStore } from "./store.js";
 
-function sighting(overrides: Partial<Sighting> & Pick<Sighting, "id" | "species">): Sighting {
+function sighting(overrides: Partial<Sighting> & Pick<Sighting, "id" | "speciesKey">): Sighting {
   return {
     lat: 52.1,
     lng: 21.0,
@@ -12,6 +12,30 @@ function sighting(overrides: Partial<Sighting> & Pick<Sighting, "id" | "species"
   };
 }
 
+const speciesFixture: SpeciesRef[] = [
+  { taxonKey: 1, scientificName: "B sp", namePl: "B", occurrenceCount: 10, isProtected: false },
+  { taxonKey: 2, scientificName: "A sp", namePl: "A", occurrenceCount: 99, isProtected: true },
+  { taxonKey: 3, scientificName: "C sp", namePl: null, occurrenceCount: null, isProtected: false },
+];
+
+describe("createStore species methods", () => {
+  it("lists species by occurrenceCount desc, nulls last", async () => {
+    const store = createStore([], speciesFixture);
+    const keys = (await store.listSpecies()).map((s) => s.taxonKey);
+    expect(keys).toEqual([2, 1, 3]);
+  });
+
+  it("reports existence by key", async () => {
+    const store = createStore([], speciesFixture);
+    expect(await store.speciesExists(2)).toBe(true);
+    expect(await store.speciesExists(999)).toBe(false);
+  });
+
+  it("serves an empty catalogue when no species were seeded", async () => {
+    expect(await createStore([]).listSpecies()).toEqual([]);
+  });
+});
+
 describe("listSpeciesStats", () => {
   it("returns an empty list for an empty store", async () => {
     expect(await createStore([]).listSpeciesStats()).toEqual([]);
@@ -19,37 +43,36 @@ describe("listSpeciesStats", () => {
 
   it("counts every sighting per species and orders most-reported first", async () => {
     const store = createStore([
-      sighting({ id: "1", species: "KURKA" }),
-      sighting({ id: "2", species: "BOROWIK" }),
-      sighting({ id: "3", species: "BOROWIK" }),
-      sighting({ id: "4", species: "BOROWIK" }),
+      sighting({ id: "1", speciesKey: 20 }),
+      sighting({ id: "2", speciesKey: 10 }),
+      sighting({ id: "3", speciesKey: 10 }),
+      sighting({ id: "4", speciesKey: 10 }),
     ]);
 
     const result = await store.listSpeciesStats();
 
-    expect(result.map((s) => [s.species, s.count])).toEqual([
-      ["BOROWIK", 3],
-      ["KURKA", 1],
+    expect(result.map((s) => [s.speciesKey, s.count])).toEqual([
+      [10, 3],
+      [20, 1],
     ]);
   });
 
   it("ignores when a species was first reported", async () => {
     const store = createStore([
-      sighting({ id: "1", species: "BOROWIK", createdAt: "2026-06-01T00:00:00.000Z" }),
-      sighting({ id: "2", species: "KURKA", createdAt: "2026-07-20T00:00:00.000Z" }),
-      sighting({ id: "3", species: "KURKA", createdAt: "2026-07-21T00:00:00.000Z" }),
+      sighting({ id: "1", speciesKey: 10, createdAt: "2026-06-01T00:00:00.000Z" }),
+      sighting({ id: "2", speciesKey: 20, createdAt: "2026-07-20T00:00:00.000Z" }),
+      sighting({ id: "3", speciesKey: 20, createdAt: "2026-07-21T00:00:00.000Z" }),
     ]);
 
     const result = await store.listSpeciesStats();
 
-    expect(result[0].species).toBe("KURKA");
+    expect(result[0].speciesKey).toBe(20);
   });
-
 });
 
 describe("listOccurrenceCells", () => {
   const base = {
-    species: "BOROWIK" as const,
+    speciesKey: 10,
     foundAt: "2026-07-20T00:00:00.000Z",
     createdAt: "2026-07-20T10:00:00.000Z",
   };
@@ -74,20 +97,20 @@ describe("listOccurrenceCells", () => {
 
   it("applies the species filter before aggregating", async () => {
     const store = createStore([
-      { ...base, id: "a", lat: 52.0, lng: 21.0, species: "BOROWIK" },
-      { ...base, id: "b", lat: 52.03, lng: 21.03, species: "KURKA" },
+      { ...base, id: "a", lat: 52.0, lng: 21.0, speciesKey: 10 },
+      { ...base, id: "b", lat: 52.03, lng: 21.03, speciesKey: 20 },
     ]);
 
-    const cells = await store.listOccurrenceCells({ species: ["BOROWIK"] }, 0.08);
+    const cells = await store.listOccurrenceCells({ speciesKey: [10] }, 0.08);
 
     expect(cells).toHaveLength(1);
     expect(cells[0].count).toBe(1);
   });
 
   it("drops a cell entirely when the filter removes all its sightings", async () => {
-    const store = createStore([{ ...base, id: "a", lat: 52.0, lng: 21.0, species: "KURKA" }]);
+    const store = createStore([{ ...base, id: "a", lat: 52.0, lng: 21.0, speciesKey: 20 }]);
 
-    expect(await store.listOccurrenceCells({ species: ["BOROWIK"] }, 0.08)).toEqual([]);
+    expect(await store.listOccurrenceCells({ speciesKey: [10] }, 0.08)).toEqual([]);
   });
 
   it("applies the date filter before aggregating", async () => {

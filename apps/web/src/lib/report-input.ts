@@ -1,8 +1,8 @@
-import type { Species, SightingInput } from "@runo-map/shared";
+import type { SightingInput } from "@runo-map/shared";
 
 // Raw values the report form collects, before shaping into the API body.
 export interface ReportFormValues {
-  species: Species;
+  speciesKey: number;
   foundAt: string; // native <input type="date"> value: "YYYY-MM-DD"
   comment: string;
 }
@@ -14,7 +14,7 @@ export function toSightingInput(
   location: { lat: number; lng: number },
 ): SightingInput {
   return {
-    species: values.species,
+    speciesKey: values.speciesKey,
     lat: location.lat,
     lng: location.lng,
     foundAt: `${values.foundAt}T00:00:00.000Z`,

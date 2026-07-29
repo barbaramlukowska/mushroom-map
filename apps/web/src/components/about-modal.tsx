@@ -42,6 +42,10 @@ export function AboutModal({ open, onOpenChange }: AboutModalProps) {
             kolor mówi, jak dawno było ostatnie: ciemne to świeże, blade to starsze.
             Kliknij kółko, żeby zobaczyć poszczególne zgłoszenia.
           </p>
+          <p className="text-content-soft">
+            Oznaczasz i zbierasz na własną odpowiedzialność. Aplikacja nie ocenia jadalności
+            grzybów — zawsze weryfikuj z atlasem lub grzyboznawcą.
+          </p>
         </div>
       </DialogContent>
     </Dialog>

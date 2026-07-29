@@ -9,7 +9,7 @@ function cell(lat: number, lng: number): OccurrenceCell {
 function sighting(lat: number, lng: number): Sighting {
   return {
     id: "id-1",
-    species: "BOROWIK",
+    speciesKey: 1,
     lat,
     lng,
     foundAt: "2026-07-20T00:00:00.000Z",

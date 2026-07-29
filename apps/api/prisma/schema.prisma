@@ -7,25 +7,25 @@ datasource db {
   provider = "postgresql"
 }
 
-// Must stay in sync with SPECIES in packages/shared.
-enum Species {
-  BOROWIK
-  PODGRZYBEK
-  KURKA
-  MASLAK
-  KOZLARZ
-  RYDZ
-  OPIENKA
-  KANIA
+// Macrofungus catalogue, seeded from the committed prisma/species-ref.json (see
+// scripts/fetch-gbif-species.ts). GBIF is never called at runtime.
+model SpeciesRef {
+  taxonKey        Int        @id // GBIF species key
+  scientificName  String
+  namePl          String? // null → UI shows scientificName
+  occurrenceCount Int? // GBIF popularity; sorts the catalogue
+  isProtected     Boolean    @default(false) // Rozp. MŚ 2014 list
+  sightings       Sighting[]
 }
 
 model Sighting {
-  id        String   @id @default(cuid())
-  species   Species
-  lat       Float // rounded to ~500 m before insert (privacy)
-  lng       Float
-  foundAt   DateTime
-  comment   String?  @db.VarChar(280)
-  createdAt DateTime @default(now())
-  userId    String? // always null in MVP; future auth hook
+  id         String     @id @default(cuid())
+  speciesKey Int
+  species    SpeciesRef @relation(fields: [speciesKey], references: [taxonKey])
+  lat        Float // rounded to ~500 m before insert (privacy)
+  lng        Float
+  foundAt    DateTime
+  comment    String?    @db.VarChar(280)
+  createdAt  DateTime   @default(now())
+  userId     String? // always null in MVP; future auth hook
 }

@@ -113,7 +113,7 @@ describe("cellCenter", () => {
 function sighting(overrides: Partial<Sighting> = {}): Sighting {
   return {
     id: "id-1",
-    species: "BOROWIK",
+    speciesKey: 1,
     lat: 52.0,
     lng: 21.0,
     foundAt: "2026-07-20T00:00:00.000Z",
@@ -188,8 +188,8 @@ describe("aggregateCells", () => {
   it("counts sightings of different species together — species is not encoded", () => {
     const cells = aggregateCells(
       [
-        sighting({ id: "a", species: "BOROWIK" }),
-        sighting({ id: "b", species: "KURKA" }),
+        sighting({ id: "a", speciesKey: 1 }),
+        sighting({ id: "b", speciesKey: 2 }),
       ],
       0.08,
     );
@@ -204,23 +204,23 @@ describe("occurrenceCellFilterSchema", () => {
     const parsed = occurrenceCellFilterSchema.safeParse({
       zoom: "9",
       bbox: "14.1,49.1,24.1,54.9",
-      species: ["BOROWIK", "KURKA"],
+      speciesKey: ["1", "2"],
       from: "2026-07-01T00:00:00.000Z",
     });
 
     expect(parsed.success).toBe(true);
     if (!parsed.success) return;
     expect(parsed.data.zoom).toBe(9);
-    expect(parsed.data.species).toEqual(["BOROWIK", "KURKA"]);
+    expect(parsed.data.speciesKey).toEqual([1, 2]);
     expect(parsed.data.bbox).toEqual([14.1, 49.1, 24.1, 54.9]);
   });
 
-  it("normalizes a single species to an array (Express 5 query shape)", () => {
-    const parsed = occurrenceCellFilterSchema.safeParse({ zoom: "9", species: "BOROWIK" });
+  it("normalizes a single species key to an array (Express 5 query shape)", () => {
+    const parsed = occurrenceCellFilterSchema.safeParse({ zoom: "9", speciesKey: "1" });
 
     expect(parsed.success).toBe(true);
     if (!parsed.success) return;
-    expect(parsed.data.species).toEqual(["BOROWIK"]);
+    expect(parsed.data.speciesKey).toEqual([1]);
   });
 
   // Fail closed: without a zoom the server would have to guess a grid step, and
@@ -248,9 +248,9 @@ describe("occurrenceCellFilterSchema", () => {
     expect(occurrenceCellFilterSchema.safeParse({ zoom: "abc" }).success).toBe(false);
   });
 
-  it("rejects an unknown species", () => {
+  it("rejects a non-numeric species key", () => {
     expect(
-      occurrenceCellFilterSchema.safeParse({ zoom: "9", species: "MUCHOMOR" }).success,
+      occurrenceCellFilterSchema.safeParse({ zoom: "9", speciesKey: "MUCHOMOR" }).success,
     ).toBe(false);
   });
 

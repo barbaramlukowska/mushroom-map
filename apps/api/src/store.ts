@@ -18,6 +18,9 @@ export interface Store {
   // Takes a grid step, not a zoom: turning zoom into a step is the route's job,
   // so the store never has to know what a map zoom is.
   listOccurrenceCells(filter: SightingFilter, step: number): Promise<OccurrenceCell[]>;
+  // Touches the database so an external keep-alive hitting /api/health can stop
+  // both Render's service spin-down and Supabase's free-tier project pause.
+  ping(): Promise<void>;
 }
 
 const inBbox = (s: Sighting, [minLng, minLat, maxLng, maxLat]: [number, number, number, number]) =>
@@ -67,5 +70,6 @@ export function createStore(seed: Sighting[] = []): Store {
         step,
       );
     },
+    async ping(): Promise<void> {},
   };
 }

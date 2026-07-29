@@ -279,6 +279,9 @@ describe("error handling", () => {
       listOccurrenceCells() {
         throw new Error("db exploded");
       },
+      ping() {
+        throw new Error("db exploded");
+      },
     };
     const app = createApp(brokenStore);
 
@@ -327,6 +330,26 @@ describe("GET /api/health", () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ status: "ok" });
+  });
+
+  it("responds 500 when the database ping fails (keep-alive should retry, not assume health)", async () => {
+    const brokenStore = {
+      list: async () => [],
+      getById: async () => undefined,
+      add: async () => {
+        throw new Error("db exploded");
+      },
+      listSpeciesStats: async () => [],
+      listOccurrenceCells: async () => [],
+      ping: async () => {
+        throw new Error("db exploded");
+      },
+    };
+    const app = createApp(brokenStore);
+
+    const res = await request(app).get("/api/health");
+
+    expect(res.status).toBe(500);
   });
 });
 

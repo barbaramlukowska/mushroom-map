@@ -7,6 +7,7 @@ import type { OccurrenceCell } from "@runo-map/shared";
 import { cellAppearance } from "@/lib/cell-appearance";
 import { reportCountLabel } from "@/lib/report-count-label";
 import { buildTileUrl } from "@/lib/tile-url";
+import { LocateControl } from "./locate-control";
 import "leaflet/dist/leaflet.css";
 
 const POLAND_CENTER: [number, number] = [52.0, 19.5];
@@ -19,8 +20,7 @@ function cellIcon(count: number, newestFoundAt: string, now: Date, zoom: number)
     now,
     zoom,
   );
-  // role="img" + aria-label: the visible label can be blank at the low zooms, so
-  // the count has to be spelled out for assistive technology either way.
+  // aria-label: label can be blank at low zoom, so spell out the count for a11y.
   return divIcon({
     className: "",
     html: `<div role="img" aria-label="${reportCountLabel(count)}" style="width:${diameter}px;height:${diameter}px;background:${fill};border:2px solid ${outline};border-radius:50%;box-shadow:0 3px 10px rgba(45,76,59,0.35);display:flex;align-items:center;justify-content:center;color:${ink};font:600 ${fontSize}px/1 system-ui,sans-serif;">${label}</div>`,
@@ -43,11 +43,8 @@ function MapClickHandler({
   return null;
 }
 
-// Bridges Leaflet map movement to React state in the parent. Reports the visible
-// area and the zoom together on every completed pan/zoom (moveend covers both)
-// and once on mount, so the initial fetch is keyed on the actual viewport.
-// They travel as one object because the server needs both to answer at all —
-// reporting them separately would fire a request with a stale zoom.
+// Bridges Leaflet map movement to React state; bbox+zoom travel together so
+// the server never sees a stale zoom with a fresh bbox.
 function ViewHandler({
   onViewChange,
 }: {
@@ -66,8 +63,7 @@ function ViewHandler({
 
 interface SightingsMapProps {
   cells: OccurrenceCell[];
-  // The zoom the cells were aggregated at — drives the circle labels. Undefined
-  // until the parent has a view to report; no cells exist before that.
+  // Zoom the cells were aggregated at — drives the circle labels.
   zoom?: number;
   onCellClick?: (cell: OccurrenceCell) => void;
   onMapClick?: (location: { lat: number; lng: number }) => void;
@@ -81,10 +77,8 @@ export function SightingsMap({
   onMapClick,
   onViewChange,
 }: SightingsMapProps) {
-  // A cell has no stable id — it is derived from whatever matches the current
-  // filter — so markers are rebuilt on every change. That is fine now: the old
-  // per-sighting cache existed only to stop leaflet.markercluster from
-  // restarting its animation, and clustering is gone.
+  // Cells have no stable id, so markers rebuild on every change — fine now
+  // that leaflet.markercluster (and its animation-restart concern) is gone.
   const now = new Date();
 
   return (
@@ -102,6 +96,7 @@ export function SightingsMap({
       <ZoomControl position="bottomright" />
       {onMapClick && <MapClickHandler onMapClick={onMapClick} />}
       {onViewChange && <ViewHandler onViewChange={onViewChange} />}
+      <LocateControl />
       {cells.map((cell) => (
         <Marker
           key={`${cell.lat}:${cell.lng}`}

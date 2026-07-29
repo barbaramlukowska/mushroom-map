@@ -1,7 +1,17 @@
 import { describe, expect, it } from "vitest";
 import request from "supertest";
 import { createApp } from "./app.js";
+import { demoSpecies } from "./seed.js";
 import { createStore } from "./store.js";
+
+// GBIF keys of the species the default store knows (see demoSpecies). Named here
+// so an assertion reads as a species rather than as a seven-digit number.
+const BOROWIK = 5954958; // Boletus edulis
+const KURKA = 5249504; // Cantharellus cibarius
+const RYDZ = 5248629; // Lactarius deliciosus
+const MASLAK = 7777157; // Suillus luteus
+const KANIA = 8914748; // Macrolepiota procera
+const UNKNOWN_KEY = 99999999;
 
 describe("GET /api/sightings", () => {
   it("responds 200 with a list of sightings", async () => {
@@ -14,7 +24,7 @@ describe("GET /api/sightings", () => {
     expect(res.body.length).toBeGreaterThan(0);
     expect(res.body[0]).toMatchObject({
       id: expect.any(String),
-      species: expect.any(String),
+      speciesKey: expect.any(Number),
       lat: expect.any(Number),
       lng: expect.any(Number),
       foundAt: expect.any(String),
@@ -22,9 +32,42 @@ describe("GET /api/sightings", () => {
   });
 });
 
+describe("GET /api/species", () => {
+  it("serves the reference list sorted by popularity", async () => {
+    const res = await request(createApp()).get("/api/species");
+
+    expect(res.status).toBe(200);
+    expect(res.body.length).toBeGreaterThan(1);
+    expect(res.body[0].occurrenceCount).toBeGreaterThanOrEqual(res.body[1].occurrenceCount);
+  });
+
+  it("carries the fields the UI needs per row", async () => {
+    const res = await request(createApp()).get("/api/species");
+
+    expect(res.body[0]).toMatchObject({
+      taxonKey: expect.any(Number),
+      scientificName: expect.any(String),
+      isProtected: expect.any(Boolean),
+    });
+  });
+
+  it("sinks a species with no GBIF count to the end, not to the front", async () => {
+    const res = await request(createApp()).get("/api/species");
+
+    expect(res.body.at(-1).occurrenceCount).toBeNull();
+  });
+
+  it("responds with an empty list when no species are known", async () => {
+    const res = await request(createApp(createStore([]))).get("/api/species");
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual([]);
+  });
+});
+
 describe("POST /api/sightings", () => {
   const validInput = {
-    species: "RYDZ",
+    speciesKey: RYDZ,
     lat: 53.42,
     lng: 14.55,
     foundAt: "2026-07-09T00:00:00.000Z",
@@ -48,7 +91,7 @@ describe("POST /api/sightings", () => {
     await request(app).post("/api/sightings").send(validInput);
     const res = await request(app).get("/api/sightings");
 
-    expect(res.body.map((s: { species: string }) => s.species)).toContain("RYDZ");
+    expect(res.body.map((s: { speciesKey: number }) => s.speciesKey)).toContain(RYDZ);
   });
 
   it("rounds coordinates to ~500 m before saving (location privacy)", async () => {
@@ -62,12 +105,19 @@ describe("POST /api/sightings", () => {
     expect(res.body.lng).toBe(14.555);
   });
 
-  it("responds 400 with issues for an unknown species", async () => {
+  it("responds 400 for a speciesKey that is not in the catalogue", async () => {
     const app = createApp();
 
-    const res = await request(app)
-      .post("/api/sightings")
-      .send({ ...validInput, species: "MUCHOMOR_SROMOTNIKOWY" });
+    const res = await request(app).post("/api/sightings").send({ ...validInput, speciesKey: UNKNOWN_KEY });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe("Unknown species");
+  });
+
+  it("responds 400 with issues for a speciesKey that is not a positive integer", async () => {
+    const app = createApp();
+
+    const res = await request(app).post("/api/sightings").send({ ...validInput, speciesKey: "BOROWIK" });
 
     expect(res.status).toBe(400);
     expect(res.body.error).toBe("Invalid input");
@@ -89,7 +139,7 @@ describe("GET /api/sightings/:id", () => {
     const res = await request(createApp()).get("/api/sightings/seed-1");
 
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({ id: "seed-1", species: "BOROWIK" });
+    expect(res.body).toMatchObject({ id: "seed-1", speciesKey: BOROWIK });
   });
 
   it("responds 404 for an unknown id", async () => {
@@ -101,13 +151,15 @@ describe("GET /api/sightings/:id", () => {
 });
 
 describe("GET /api/species-stats", () => {
-  it("responds 200 with one entry per seeded species", async () => {
+  it("responds 200 with one entry per seeded species, keyed by speciesKey", async () => {
     const res = await request(createApp()).get("/api/species-stats");
 
     expect(res.status).toBe(200);
+    // Both seeded species have one report, so the tie-break by key decides:
+    // Cantharellus cibarius (5249504) before Boletus edulis (5954958).
     expect(res.body).toEqual([
-      { species: "BOROWIK", count: 1 },
-      { species: "KURKA", count: 1 },
+      { speciesKey: KURKA, count: 1 },
+      { speciesKey: BOROWIK, count: 1 },
     ]);
   });
 
@@ -120,7 +172,7 @@ describe("GET /api/species-stats", () => {
   });
 
   it("responds with an empty list when nothing has been reported", async () => {
-    const res = await request(createApp(createStore([]))).get("/api/species-stats");
+    const res = await request(createApp(createStore([], demoSpecies))).get("/api/species-stats");
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual([]);
@@ -131,7 +183,7 @@ describe("GET /api/species-stats", () => {
 
     for (let i = 0; i < 2; i++) {
       await request(app).post("/api/sightings").send({
-        species: "MASLAK",
+        speciesKey: MASLAK,
         lat: 52.2,
         lng: 21.1,
         foundAt: "2026-07-20T00:00:00.000Z",
@@ -139,17 +191,17 @@ describe("GET /api/species-stats", () => {
     }
     const res = await request(app).get("/api/species-stats");
 
-    expect(res.body[0]).toMatchObject({ species: "MASLAK", count: 2 });
+    expect(res.body[0]).toMatchObject({ speciesKey: MASLAK, count: 2 });
   });
 
   it("moves the leading spot to a species that overtakes on count", async () => {
     const app = createApp();
-    const countOf = (body: { species: string; count: number }[], species: string) =>
-      body.find((s) => s.species === species)?.count;
+    const countOf = (body: { speciesKey: number; count: number }[], key: number) =>
+      body.find((s) => s.speciesKey === key)?.count;
 
     for (let i = 0; i < 3; i++) {
       await request(app).post("/api/sightings").send({
-        species: "MASLAK",
+        speciesKey: MASLAK,
         lat: 52.2,
         lng: 21.1,
         foundAt: "2026-07-20T00:00:00.000Z",
@@ -157,34 +209,47 @@ describe("GET /api/species-stats", () => {
     }
     const res = await request(app).get("/api/species-stats");
 
-    expect(res.body[0].species).toBe("MASLAK");
-    expect(countOf(res.body, "MASLAK")).toBe(3);
-    expect(countOf(res.body, "BOROWIK")).toBe(1);
+    expect(res.body[0].speciesKey).toBe(MASLAK);
+    expect(countOf(res.body, MASLAK)).toBe(3);
+    expect(countOf(res.body, BOROWIK)).toBe(1);
   });
 });
 
 describe("GET /api/sightings filters", () => {
-  it("filters by species", async () => {
-    const res = await request(createApp()).get("/api/sightings?species=KURKA");
+  it("filters by species key", async () => {
+    const res = await request(createApp()).get(`/api/sightings?speciesKey=${KURKA}`);
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(1);
-    expect(res.body[0].species).toBe("KURKA");
+    expect(res.body[0].speciesKey).toBe(KURKA);
   });
 
-  it("filters by multiple species (repeated query key)", async () => {
-    const res = await request(createApp()).get("/api/sightings?species=KURKA&species=BOROWIK");
+  it("filters by multiple species keys (repeated query key)", async () => {
+    const res = await request(createApp()).get(
+      `/api/sightings?speciesKey=${KURKA}&speciesKey=${BOROWIK}`,
+    );
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(2);
-    expect(res.body.map((s: { species: string }) => s.species).sort()).toEqual(["BOROWIK", "KURKA"]);
+    expect(res.body.map((s: { speciesKey: number }) => s.speciesKey).sort()).toEqual(
+      [KURKA, BOROWIK].sort(),
+    );
   });
 
-  it("responds 400 when one of multiple species is unknown", async () => {
-    const res = await request(createApp()).get("/api/sightings?species=KURKA&species=SMERF");
+  it("responds 400 when one of multiple species keys is not a number", async () => {
+    const res = await request(createApp()).get(`/api/sightings?speciesKey=${KURKA}&speciesKey=SMERF`);
 
     expect(res.status).toBe(400);
     expect(res.body.error).toBe("Invalid input");
+  });
+
+  // An unknown-but-numeric key is a filter that matches nothing, not bad input:
+  // the catalogue can legitimately move on while an old link keeps its key.
+  it("returns an empty list for a numeric key nothing was reported under", async () => {
+    const res = await request(createApp()).get(`/api/sightings?speciesKey=${UNKNOWN_KEY}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual([]);
   });
 
   it("filters by foundAt date range", async () => {
@@ -197,8 +262,8 @@ describe("GET /api/sightings filters", () => {
     expect(res.body[0].id).toBe("seed-2");
   });
 
-  it("responds 400 for an unknown species filter", async () => {
-    const res = await request(createApp()).get("/api/sightings?species=SMERF");
+  it("responds 400 for a non-numeric species filter", async () => {
+    const res = await request(createApp()).get("/api/sightings?speciesKey=SMERF");
 
     expect(res.status).toBe(400);
     expect(res.body.error).toBe("Invalid input");
@@ -233,7 +298,7 @@ describe("rate limiting", () => {
 
     for (let i = 0; i < 10; i++) {
       const ok = await request(app).post("/api/sightings").send({
-        species: "KANIA",
+        speciesKey: KANIA,
         lat: 51.1,
         lng: 17.03,
         foundAt: "2026-07-09T00:00:00.000Z",
@@ -242,7 +307,7 @@ describe("rate limiting", () => {
     }
 
     const blocked = await request(app).post("/api/sightings").send({
-      species: "KANIA",
+      speciesKey: KANIA,
       lat: 51.1,
       lng: 17.03,
       foundAt: "2026-07-09T00:00:00.000Z",
@@ -274,6 +339,12 @@ describe("error handling", () => {
         throw new Error("db exploded");
       },
       listSpeciesStats() {
+        throw new Error("db exploded");
+      },
+      listSpecies() {
+        throw new Error("db exploded");
+      },
+      speciesExists() {
         throw new Error("db exploded");
       },
       listOccurrenceCells() {
@@ -340,6 +411,8 @@ describe("GET /api/health", () => {
         throw new Error("db exploded");
       },
       listSpeciesStats: async () => [],
+      listSpecies: async () => [],
+      speciesExists: async () => false,
       listOccurrenceCells: async () => [],
       ping: async () => {
         throw new Error("db exploded");
@@ -383,7 +456,7 @@ describe("CORS", () => {
 
 describe("GET /api/occurrence-cells", () => {
   const base = {
-    species: "BOROWIK" as const,
+    speciesKey: BOROWIK,
     foundAt: "2026-07-20T00:00:00.000Z",
     createdAt: "2026-07-20T10:00:00.000Z",
   };
@@ -431,31 +504,31 @@ describe("GET /api/occurrence-cells", () => {
     expect(fine.body).toHaveLength(2);
   });
 
-  it("filters by species before aggregating", async () => {
+  it("filters by species key before aggregating", async () => {
     const app = createApp(
       createStore([
-        { ...base, id: "a", lat: 52.0, lng: 21.0, species: "BOROWIK" },
-        { ...base, id: "b", lat: 52.03, lng: 21.03, species: "KURKA" },
+        { ...base, id: "a", lat: 52.0, lng: 21.0, speciesKey: BOROWIK },
+        { ...base, id: "b", lat: 52.03, lng: 21.03, speciesKey: KURKA },
       ]),
     );
 
-    const res = await request(app).get("/api/occurrence-cells?zoom=9&species=BOROWIK");
+    const res = await request(app).get(`/api/occurrence-cells?zoom=9&speciesKey=${BOROWIK}`);
 
     expect(res.body).toHaveLength(1);
     expect(res.body[0].count).toBe(1);
   });
 
-  it("accepts a repeated species param", async () => {
+  it("accepts a repeated speciesKey param", async () => {
     const app = createApp(
       createStore([
-        { ...base, id: "a", lat: 52.0, lng: 21.0, species: "BOROWIK" },
-        { ...base, id: "b", lat: 52.03, lng: 21.03, species: "KURKA" },
-        { ...base, id: "c", lat: 52.04, lng: 21.04, species: "MASLAK" },
+        { ...base, id: "a", lat: 52.0, lng: 21.0, speciesKey: BOROWIK },
+        { ...base, id: "b", lat: 52.03, lng: 21.03, speciesKey: KURKA },
+        { ...base, id: "c", lat: 52.04, lng: 21.04, speciesKey: MASLAK },
       ]),
     );
 
     const res = await request(app).get(
-      "/api/occurrence-cells?zoom=9&species=BOROWIK&species=KURKA",
+      `/api/occurrence-cells?zoom=9&speciesKey=${BOROWIK}&speciesKey=${KURKA}`,
     );
 
     expect(res.body[0].count).toBe(2);
@@ -475,8 +548,8 @@ describe("GET /api/occurrence-cells", () => {
     expect(res.status).toBe(400);
   });
 
-  it("responds 400 for an unknown species", async () => {
-    const res = await request(createApp()).get("/api/occurrence-cells?zoom=9&species=MUCHOMOR");
+  it("responds 400 for a non-numeric species key", async () => {
+    const res = await request(createApp()).get("/api/occurrence-cells?zoom=9&speciesKey=MUCHOMOR");
 
     expect(res.status).toBe(400);
   });

@@ -9,11 +9,11 @@ import {
   sightingInputSchema,
 } from "@runo-map/shared";
 import { roundCoord } from "./geo.js";
-import { demoSeed } from "./seed.js";
+import { demoSeed, demoSpecies } from "./seed.js";
 import { createStore, type Store } from "./store.js";
 
 // App factory — tests create their own instance without starting a real server.
-export function createApp(store: Store = createStore(demoSeed)): Express {
+export function createApp(store: Store = createStore(demoSeed, demoSpecies)): Express {
   const app = express();
 
   // Behind Render's reverse proxy: read the client IP from X-Forwarded-For
@@ -64,6 +64,12 @@ export function createApp(store: Store = createStore(demoSeed)): Express {
     res.json(await store.listSpeciesStats());
   });
 
+  // The species catalogue, straight from our DB — GBIF is never called at
+  // runtime. The client joins it with /api/species-stats for the filter list.
+  app.get("/api/species", async (_req, res) => {
+    res.json(await store.listSpecies());
+  });
+
   // Anti-vandalism: max 10 new sightings per IP per hour; reads stay unlimited.
   const postLimiter = rateLimit({
     windowMs: 60 * 60 * 1000,
@@ -77,6 +83,12 @@ export function createApp(store: Store = createStore(demoSeed)): Express {
     const parsed = sightingInputSchema.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: "Invalid input", issues: parsed.error.issues });
+      return;
+    }
+    // The key is a foreign key: an unknown one would be a 500 from Postgres, so
+    // reject it at the edge as the bad input it is.
+    if (!(await store.speciesExists(parsed.data.speciesKey))) {
+      res.status(400).json({ error: "Unknown species" });
       return;
     }
     const sighting = await store.add({

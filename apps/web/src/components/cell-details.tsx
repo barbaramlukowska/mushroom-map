@@ -1,16 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SPECIES_LABELS, type OccurrenceCell, type Sighting, type Species } from "@runo-map/shared";
+import type { OccurrenceCell, Sighting, SpeciesRef } from "@runo-map/shared";
 import { Button } from "@/components/ui/button";
 import { cellBbox, intersectBbox, isInCell } from "@/lib/cell-bbox";
 import { formatFoundAgo } from "@/lib/found-ago";
 import { reportCountLabel } from "@/lib/report-count-label";
+import { speciesLabel } from "@/lib/species-catalog";
 
 interface CellDetailsProps {
   cell: OccurrenceCell;
   step: number;
-  species: Species[];
+  speciesKeys: number[];
+  // The species catalogue, for turning a report's key into a readable name.
+  lookup: Map<number, SpeciesRef>;
   from?: string;
   // The viewport the circle's count was aggregated over. The query is clipped to
   // it so the list can't include reports the circle never counted.
@@ -18,7 +21,15 @@ interface CellDetailsProps {
   onClose: () => void;
 }
 
-export function CellDetails({ cell, step, species, from, viewportBbox, onClose }: CellDetailsProps) {
+export function CellDetails({
+  cell,
+  step,
+  speciesKeys,
+  lookup,
+  from,
+  viewportBbox,
+  onClose,
+}: CellDetailsProps) {
   const [sightings, setSightings] = useState<Sighting[] | null>(null);
   const [failed, setFailed] = useState(false);
 
@@ -35,7 +46,7 @@ export function CellDetails({ cell, step, species, from, viewportBbox, onClose }
 
     const params = new URLSearchParams();
     params.set("bbox", bbox);
-    for (const s of species) params.append("species", s);
+    for (const key of speciesKeys) params.append("speciesKey", String(key));
     if (from) params.set("from", from);
 
     const controller = new AbortController();
@@ -60,7 +71,7 @@ export function CellDetails({ cell, step, species, from, viewportBbox, onClose }
         setFailed(true);
       });
     return () => controller.abort();
-  }, [cell, step, species, from, viewportBbox]);
+  }, [cell, step, speciesKeys, from, viewportBbox]);
 
   const now = new Date();
 
@@ -103,8 +114,12 @@ export function CellDetails({ cell, step, species, from, viewportBbox, onClose }
 
       {sightings?.map((sighting) => (
         <div key={sighting.id} className="border-t border-line/20 px-4 py-3">
-          <p className="text-xs font-medium text-content">{SPECIES_LABELS[sighting.species].pl}</p>
-          <p className="text-latin">{SPECIES_LABELS[sighting.species].latin}</p>
+          <p className="text-xs font-medium text-content">
+            {speciesLabel(lookup.get(sighting.speciesKey))}
+          </p>
+          <p className="text-latin">
+            {lookup.get(sighting.speciesKey)?.scientificName ?? ""}
+          </p>
           <p className="mt-1 text-xs text-content-muted">
             znalezione {formatFoundAgo(sighting.foundAt, now)}
           </p>

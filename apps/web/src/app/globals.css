@@ -152,6 +152,13 @@
   @apply font-serif text-lg text-content;
 }
 
+/* Slim but visible scrollbar — scrollable lists need to show they scroll.
+   Tailwind v4 ships no scrollbar utilities. */
+@utility scrollbar-slim {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line) transparent;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

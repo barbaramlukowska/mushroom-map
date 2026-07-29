@@ -1,6 +1,6 @@
 // One entry per unique species, carrying how often it was reported.
 export interface SpeciesTally {
-  species: string;
+  speciesKey: number;
   count: number;
 }
 
@@ -11,13 +11,14 @@ export interface SpeciesTally {
 // (CVD/normal-vision validation, see the 2026-07-27 spec) against a species list
 // growing to ~150, so it was withdrawn rather than extended.
 export interface SpeciesStat {
-  species: string;
+  speciesKey: number;
   count: number;
 }
 
 // Most-reported species first — this order drives the filter list. Ties broken
-// alphabetically, so the order never wobbles between two requests over
-// unchanged data.
+// by key, so the order never wobbles between two requests over unchanged data.
+// Keys, not names: the Polish name lives in the species catalogue on the
+// frontend, and this module has no access to it.
 export function buildSpeciesStats(tallies: SpeciesTally[]): SpeciesStat[] {
-  return [...tallies].sort((a, b) => b.count - a.count || a.species.localeCompare(b.species));
+  return [...tallies].sort((a, b) => b.count - a.count || a.speciesKey - b.speciesKey);
 }

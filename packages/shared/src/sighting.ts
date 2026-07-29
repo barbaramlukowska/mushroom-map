@@ -1,9 +1,8 @@
 import { z } from "zod";
-import { SPECIES, type Species } from "./species.js";
 
 // Validates new-sighting input on the frontend form AND the API request body.
 export const sightingInputSchema = z.object({
-  species: z.enum(SPECIES),
+  speciesKey: z.number().int().positive(), // GBIF species key; existence checked by the API
   lat: z.number().min(49).max(55), // Poland's latitude range
   lng: z.number().min(14).max(24.2),
   foundAt: z.iso.datetime(),
@@ -21,14 +20,17 @@ export const bboxSchema = z
     error: "bbox min must be less than max",
   });
 
+// Express 5 yields a string for ?speciesKey=1 and an array for repeats — accept
+// both, normalize to an array, coerce because query values are strings. Exported:
+// occurrenceCellFilterSchema needs the identical rule.
+export const speciesKeyFilter = z
+  .union([z.coerce.number().int().positive(), z.array(z.coerce.number().int().positive())])
+  .transform((value) => (Array.isArray(value) ? value : [value]))
+  .optional();
+
 // Query params for listing sightings (map filters) — all optional.
 export const sightingFilterSchema = z.object({
-  // Express 5's query parser yields a string for ?species=A and an array
-  // for ?species=A&species=B — accept both, normalize to an array.
-  species: z
-    .union([z.enum(SPECIES), z.array(z.enum(SPECIES))])
-    .transform((value) => (Array.isArray(value) ? value : [value]))
-    .optional(),
+  speciesKey: speciesKeyFilter,
   from: z.iso.datetime().optional(),
   to: z.iso.datetime().optional(),
   bbox: bboxSchema.optional(),
@@ -36,10 +38,10 @@ export const sightingFilterSchema = z.object({
 
 export type SightingFilter = z.infer<typeof sightingFilterSchema>;
 
-// Dates travel as ISO strings (JSON has no Date type); Prisma introduces Date objects in stage 2.
+// Dates travel as ISO strings (JSON has no Date type).
 export interface Sighting {
   id: string;
-  species: Species;
+  speciesKey: number;
   lat: number;
   lng: number;
   foundAt: string;

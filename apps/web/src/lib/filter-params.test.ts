@@ -10,24 +10,27 @@ import {
 const now = new Date("2026-07-14T15:00:00Z");
 
 describe("parseSpeciesParam", () => {
+  const reported = new Set([10, 20]);
+
   it("returns [] when the param is absent", () => {
-    expect(parseSpeciesParam(undefined)).toEqual([]);
+    expect(parseSpeciesParam(undefined, reported)).toEqual([]);
   });
 
-  it("wraps a single value in an array", () => {
-    expect(parseSpeciesParam("BOROWIK")).toEqual(["BOROWIK"]);
+  it("keeps reported keys and drops the rest", () => {
+    expect(parseSpeciesParam(["10", "999", "abc"], reported)).toEqual([10]);
+  });
+
+  it("accepts a single value", () => {
+    expect(parseSpeciesParam("20", reported)).toEqual([20]);
   });
 
   it("keeps multiple values", () => {
-    expect(parseSpeciesParam(["BOROWIK", "KURKA"])).toEqual(["BOROWIK", "KURKA"]);
+    expect(parseSpeciesParam(["10", "20"], reported)).toEqual([10, 20]);
   });
 
-  it("drops unknown species from a hand-edited link", () => {
-    expect(parseSpeciesParam(["BOROWIK", "SMERF"])).toEqual(["BOROWIK"]);
-  });
-
-  it("returns [] for a single unknown value", () => {
-    expect(parseSpeciesParam("SMERF")).toEqual([]);
+  // Also the state before the stats request lands: no filter beats no map.
+  it("treats an empty key set as no filter at all", () => {
+    expect(parseSpeciesParam(["10"], new Set())).toEqual([]);
   });
 });
 
@@ -77,10 +80,10 @@ describe("buildPageQuery", () => {
     expect(buildPageQuery([], "all")).toBe("");
   });
 
-  it("keeps days as a preset and repeats species", () => {
-    const query = new URLSearchParams(buildPageQuery(["RYDZ"], 3));
+  it("keeps days as a preset and repeats the species key", () => {
+    const query = new URLSearchParams(buildPageQuery([10], 3));
 
-    expect(query.getAll("species")).toEqual(["RYDZ"]);
+    expect(query.getAll("speciesKey")).toEqual(["10"]);
     expect(query.get("days")).toBe("3");
     expect(query.has("from")).toBe(false);
   });
@@ -99,12 +102,10 @@ describe("buildCellsQuery", () => {
     expect(new URLSearchParams(buildCellsQuery([], "all", NOW, null, 0)).get("zoom")).toBe("0");
   });
 
-  it("repeats the species param once per selected species", () => {
-    const params = new URLSearchParams(
-      buildCellsQuery(["BOROWIK", "KURKA"], "all", NOW, null, 9),
-    );
+  it("repeats the speciesKey param once per selected species", () => {
+    const params = new URLSearchParams(buildCellsQuery([10, 20], "all", NOW, null, 9));
 
-    expect(params.getAll("species")).toEqual(["BOROWIK", "KURKA"]);
+    expect(params.getAll("speciesKey")).toEqual(["10", "20"]);
   });
 
   it("turns a day preset into a from date", () => {

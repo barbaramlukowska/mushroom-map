@@ -1,10 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Controller, useForm, type Resolver } from "react-hook-form";
-import { SPECIES, SPECIES_LABELS, sightingInputSchema } from "@runo-map/shared";
+import { ChevronDown } from "lucide-react";
+import { sightingInputSchema, type SpeciesRef } from "@runo-map/shared";
+import { matchesSpeciesQuery, sortSpeciesByName, speciesLabel } from "@/lib/species-catalog";
 import { toSightingInput, type ReportFormValues } from "@/lib/report-input";
 import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import {
   Dialog,
   DialogContent,
@@ -14,23 +23,20 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 
 interface ReportFormProps {
+  // Fetched once by MapView. Empty if that failed — the form then refuses to
+  // submit rather than posting a bad key.
+  catalog: SpeciesRef[];
   location: { lat: number; lng: number };
   onClose: () => void;
   onReported: () => void;
 }
 
 const FIELD_MESSAGES_PL: Record<string, string> = {
-  species: "Wybierz gatunek grzyba.",
+  speciesKey: "Wybierz gatunek grzyba.",
   foundAt: "Podaj poprawną datę znalezienia.",
   comment: "Komentarz może mieć maksymalnie 280 znaków.",
   root: "Wybrane miejsce leży poza granicami Polski.",
@@ -58,9 +64,20 @@ const todayIso = () => new Date().toISOString().slice(0, 10);
 
 const LABEL_CLASS = "mb-1 text-xs font-semibold uppercase tracking-wider text-content";
 const ERROR_CLASS = "mt-1 text-[11px] text-danger";
+const BADGE_CLASS =
+  "shrink-0 rounded-full bg-fill/10 px-2 py-0.5 text-[10px] font-medium text-content-soft";
 
-export function ReportForm({ location, onClose, onReported }: ReportFormProps) {
+// Nothing is preselected: any default would be a species the user did not choose,
+// and GBIF's most-recorded is Amanita muscaria — photographed, not picked.
+const SPECIES_PLACEHOLDER = "Wybierz gatunek…";
+
+export function ReportForm({ catalog, location, onClose, onReported }: ReportFormProps) {
   const [serverError, setServerError] = useState<string | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  // The species popover portals in here, not into body: the dialog's scroll lock
+  // cancels wheel and touch scrolling outside its own subtree.
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const [query, setQuery] = useState("");
 
   const {
     register,
@@ -70,11 +87,16 @@ export function ReportForm({ location, onClose, onReported }: ReportFormProps) {
     formState: { errors, isSubmitting },
   } = useForm<ReportFormValues>({
     resolver: makeResolver(location),
-    defaultValues: { species: SPECIES[0], foundAt: todayIso(), comment: "" },
+    // 0 fails the schema, so submitting without picking gives the "Wybierz gatunek
+    // grzyba." field error instead of posting whatever happened to be first.
+    defaultValues: { speciesKey: 0, foundAt: todayIso(), comment: "" },
   });
 
   const commentLength = watch("comment")?.length ?? 0;
   const rootError = (errors as { root?: { message?: string } }).root?.message;
+
+  // Sorted once per catalogue, not on every keystroke.
+  const sortedCatalog = useMemo(() => sortSpeciesByName(catalog), [catalog]);
 
   const onSubmit = handleSubmit(async (values) => {
     setServerError(null);
@@ -111,7 +133,7 @@ export function ReportForm({ location, onClose, onReported }: ReportFormProps) {
         if (!open) onClose();
       }}
     >
-      <DialogContent className="max-w-sm rounded-2xl border-line/30 bg-surface/95 shadow-panel backdrop-blur-lg sm:max-w-sm">
+      <DialogContent ref={dialogRef} className="max-w-sm rounded-2xl border-line/30 bg-surface/95 shadow-panel backdrop-blur-lg sm:max-w-sm">
         <DialogHeader className="text-left">
           <DialogTitle className="font-serif text-lg font-normal text-content">
             Zgłoś znalezisko
@@ -123,28 +145,88 @@ export function ReportForm({ location, onClose, onReported }: ReportFormProps) {
 
         <form onSubmit={onSubmit} className="grid gap-3">
           <div>
-            <Label htmlFor="species" className={LABEL_CLASS}>
+            <Label htmlFor="speciesKey" className={LABEL_CLASS}>
               Gatunek
             </Label>
+            {/* Searchable, not a dropdown: a flat list of ~250 is unusable. */}
             <Controller
               control={control}
-              name="species"
-              render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger id="species" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SPECIES.map((s) => (
-                      <SelectItem key={s} value={s}>
-                        {SPECIES_LABELS[s].pl}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
+              name="speciesKey"
+              render={({ field }) => {
+                const selected = catalog.find((ref) => ref.taxonKey === field.value);
+                const matches = sortedCatalog.filter((ref) => matchesSpeciesQuery(ref, query));
+                return (
+                  <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        id="speciesKey"
+                        type="button"
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={pickerOpen}
+                        className={`w-full justify-between font-normal ${
+                          selected ? "" : "text-content-muted"
+                        }`}
+                      >
+                        {selected ? speciesLabel(selected) : SPECIES_PLACEHOLDER}
+                        <ChevronDown
+                          aria-hidden
+                          className={`size-4 shrink-0 opacity-60 transition-transform ${
+                            pickerOpen ? "rotate-180" : ""
+                          }`}
+                        />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      container={dialogRef.current}
+                      className="w-(--radix-popover-trigger-width) p-0"
+                    >
+                      <Command
+                        // Our own filter: shadcn's default scores the rendered
+                        // text, which would miss a diacritic-free query.
+                        shouldFilter={false}
+                      >
+                        <CommandInput
+                          placeholder="Szukaj gatunku…"
+                          value={query}
+                          onValueChange={setQuery}
+                        />
+                        {/* Taller than the vendored max-h-72, which fitted six of
+                            these two-line rows and read as a truncated list. */}
+                        <CommandList className="scrollbar-slim max-h-[50vh]">
+                          {/* Rendered by hand — with shouldFilter off, cmdk's own
+                              match count never triggers it. */}
+                          {matches.length === 0 && (
+                            <CommandEmpty>Nie znaleziono gatunku.</CommandEmpty>
+                          )}
+                          {matches.map((ref) => (
+                            <CommandItem
+                              key={ref.taxonKey}
+                              value={String(ref.taxonKey)}
+                              data-checked={ref.taxonKey === field.value ? "true" : "false"}
+                              className="cursor-pointer"
+                              onSelect={() => {
+                                field.onChange(ref.taxonKey);
+                                setPickerOpen(false);
+                              }}
+                            >
+                              <span className="flex-1">
+                                <span className="block text-xs font-medium leading-tight text-content">
+                                  {speciesLabel(ref)}
+                                </span>
+                                <span className="block text-latin">{ref.scientificName}</span>
+                              </span>
+                              {ref.isProtected && <span className={BADGE_CLASS}>pod ochroną</span>}
+                            </CommandItem>
+                          ))}
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                );
+              }}
             />
-            {errors.species && <p className={ERROR_CLASS}>{errors.species.message}</p>}
+            {errors.speciesKey && <p className={ERROR_CLASS}>{errors.speciesKey.message}</p>}
           </div>
 
           <div>
@@ -181,6 +263,11 @@ export function ReportForm({ location, onClose, onReported }: ReportFormProps) {
 
           <p className="text-[10px] font-light leading-relaxed text-content-muted">
             Lokalizacja zostanie zaokrąglona do ok. 500 m — widać las, nie dokładny mech.
+          </p>
+
+          <p className="text-[10px] font-light leading-relaxed text-content-muted">
+            Oznaczasz i zbierasz na własną odpowiedzialność. Aplikacja nie ocenia jadalności
+            grzybów — zawsze weryfikuj z atlasem lub grzyboznawcą.
           </p>
 
           {(rootError || serverError) && (

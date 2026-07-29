@@ -13,7 +13,7 @@ import type { Store } from "./store.js";
 function toSighting(row: SightingRow): Sighting {
   return {
     id: row.id,
-    species: row.species,
+    speciesKey: row.speciesKey,
     lat: row.lat,
     lng: row.lng,
     foundAt: row.foundAt.toISOString(),
@@ -26,7 +26,7 @@ function toSighting(row: SightingRow): Sighting {
 function toWhere(filter: SightingFilter) {
   const [minLng, minLat, maxLng, maxLat] = filter.bbox ?? [];
   return {
-    species: filter.species ? { in: filter.species } : undefined,
+    speciesKey: filter.speciesKey ? { in: filter.speciesKey } : undefined,
     foundAt: { gte: filter.from, lte: filter.to },
     lat: { gte: minLat, lte: maxLat },
     lng: { gte: minLng, lte: maxLng },
@@ -48,12 +48,21 @@ export function createPrismaStore(prisma: PrismaClient): Store {
     },
     async listSpeciesStats() {
       const groups = await prisma.sighting.groupBy({
-        by: ["species"],
+        by: ["speciesKey"],
         _count: { _all: true },
       });
       return buildSpeciesStats(
-        groups.map((group) => ({ species: group.species, count: group._count._all })),
+        groups.map((group) => ({ speciesKey: group.speciesKey, count: group._count._all })),
       );
+    },
+    // nulls spelled out, so this store and the in-memory one agree.
+    async listSpecies() {
+      return prisma.speciesRef.findMany({
+        orderBy: { occurrenceCount: { sort: "desc", nulls: "last" } },
+      });
+    },
+    async speciesExists(key: number) {
+      return (await prisma.speciesRef.findUnique({ where: { taxonKey: key } })) !== null;
     },
     // Aggregation happens in JS through the shared aggregateCells, the same way
     // listSpeciesStats shares buildSpeciesStats. Grouping by a computed cell key
@@ -64,7 +73,7 @@ export function createPrismaStore(prisma: PrismaClient): Store {
     async listOccurrenceCells(filter: SightingFilter, step: number): Promise<OccurrenceCell[]> {
       const rows = await prisma.sighting.findMany({
         where: toWhere(filter),
-        select: { species: true, lat: true, lng: true, foundAt: true },
+        select: { speciesKey: true, lat: true, lng: true, foundAt: true },
         // Without an explicit order Postgres may return identical queries in a
         // different row order, which reorders the aggregated array. map-view's
         // sameCells compares index-wise and would read that as new data.
@@ -73,7 +82,7 @@ export function createPrismaStore(prisma: PrismaClient): Store {
       return aggregateCells(
         rows.map((row) => ({
           id: "",
-          species: row.species,
+          speciesKey: row.speciesKey,
           lat: row.lat,
           lng: row.lng,
           foundAt: row.foundAt.toISOString(),

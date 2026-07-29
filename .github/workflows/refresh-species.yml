@@ -1,0 +1,63 @@
+name: Refresh species catalogue
+
+# Re-runs the GBIF/Wikidata import and opens a PR when species-ref.json changed.
+# Never merges: the human review of that diff is the only gate between GBIF and
+# production (OWASP A03).
+#
+# occurrenceCount churn is accepted, not bucketed: rounding would shrink the diff
+# but misstate GBIF's numbers and coarsen the combobox order.
+
+on:
+  schedule:
+    # 04:00 UTC on the 1st of each month — GBIF's Polish record counts move slowly.
+    - cron: '0 4 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: refresh-species
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: '.nvmrc'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # The script imports @runo-map/shared, whose package main is dist/. No
+      # prepare script, so install alone does not build it.
+      - run: pnpm --filter @runo-map/shared build
+      # Fails closed: a run that cannot validate GBIF's answer writes nothing, so
+      # no PR opens and the committed artifact stands.
+      - run: pnpm --filter @runo-map/api fetch-species
+
+      - uses: peter-evans/create-pull-request@v7
+        with:
+          branch: chore/refresh-species-ref
+          # Reuse the branch across months instead of piling up stale PRs.
+          delete-branch: true
+          title: 'chore: refresh species catalogue from GBIF'
+          commit-message: 'chore: refresh species-ref.json from GBIF'
+          add-paths: apps/api/prisma/species-ref.json
+          body: |
+            Automated monthly re-run of `pnpm --filter @runo-map/api fetch-species`.
+
+            Review the diff before merging — this is the only gate between GBIF and
+            production species data.
+
+            What to look at:
+            - species that left the list;
+            - a `namePl` that turned into a Latin binomial or `null`;
+            - `isProtected` flipping off for a species still on the regulation list.
+
+            After merging, the new rows reach the database on the next
+            `pnpm exec prisma db seed`.

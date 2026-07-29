@@ -1,6 +1,5 @@
 import { z } from "zod";
-import { SPECIES } from "./species.js";
-import { bboxSchema } from "./sighting.js";
+import { bboxSchema, speciesKeyFilter } from "./sighting.js";
 import type { Sighting } from "./sighting.js";
 
 // Grid ladder, coarsest first. Every step is a whole multiple of the 0.005°
@@ -100,10 +99,7 @@ export const occurrenceCellFilterSchema = z.object({
   // Not .int(): a fractional zoom is legitimate once zoomSnap drops below 1,
   // and cellStepForZoom floors it — rejecting it would 400 a valid view.
   zoom: z.coerce.number().min(0).max(22),
-  species: z
-    .union([z.enum(SPECIES), z.array(z.enum(SPECIES))])
-    .transform((value) => (Array.isArray(value) ? value : [value]))
-    .optional(),
+  speciesKey: speciesKeyFilter,
   from: z.iso.datetime().optional(),
   to: z.iso.datetime().optional(),
   bbox: bboxSchema.optional(),

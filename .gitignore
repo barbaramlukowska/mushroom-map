@@ -3,7 +3,10 @@ dist/
 .next/
 .turbo/
 *.tsbuildinfo
-src/generated/
+# **/ is load-bearing: a pattern with a slash inside it is anchored to this
+# file's directory, so plain `src/generated/` only ever matched <root>/src/generated
+# and never apps/api/src/generated (the generated Prisma client).
+**/src/generated/
 .env
 .env.*
 !.env.example

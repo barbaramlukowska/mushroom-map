@@ -6,44 +6,45 @@ describe("buildSpeciesStats", () => {
     expect(buildSpeciesStats([])).toEqual([]);
   });
 
-  it("orders species by report count, most reported first", () => {
+  it("puts the most-reported species first", () => {
     const stats = buildSpeciesStats([
-      { species: "KURKA", count: 2 },
-      { species: "BOROWIK", count: 7 },
+      { speciesKey: 10, count: 2 },
+      { speciesKey: 20, count: 9 },
     ]);
 
-    expect(stats.map((s) => s.species)).toEqual(["BOROWIK", "KURKA"]);
-    expect(stats.map((s) => s.count)).toEqual([7, 2]);
+    expect(stats.map((s) => s.speciesKey)).toEqual([20, 10]);
+    expect(stats.map((s) => s.count)).toEqual([9, 2]);
   });
 
   it("does not mutate the caller's array", () => {
     const tallies = [
-      { species: "KURKA", count: 2 },
-      { species: "BOROWIK", count: 7 },
+      { speciesKey: 10, count: 2 },
+      { speciesKey: 20, count: 9 },
     ];
 
     buildSpeciesStats(tallies);
 
-    expect(tallies[0].species).toBe("KURKA");
+    expect(tallies[0].speciesKey).toBe(10);
   });
 
   it("never returns a color field — colour no longer carries species identity", () => {
     const stats = buildSpeciesStats([
-      { species: "BOROWIK", count: 7 },
-      { species: "KURKA", count: 2 },
+      { speciesKey: 20, count: 9 },
+      { speciesKey: 10, count: 2 },
     ]);
 
     for (const stat of stats) {
-      expect(Object.keys(stat).sort()).toEqual(["count", "species"]);
+      expect(Object.keys(stat).sort()).toEqual(["count", "speciesKey"]);
     }
   });
 
-  it("breaks ties alphabetically so the order never wobbles between requests", () => {
+  it("breaks ties by key so the order never wobbles", () => {
     const stats = buildSpeciesStats([
-      { species: "KURKA", count: 3 },
-      { species: "BOROWIK", count: 3 },
+      { speciesKey: 30, count: 4 },
+      { speciesKey: 10, count: 4 },
+      { speciesKey: 20, count: 4 },
     ]);
 
-    expect(stats.map((s) => s.species)).toEqual(["BOROWIK", "KURKA"]);
+    expect(stats.map((s) => s.speciesKey)).toEqual([10, 20, 30]);
   });
 });

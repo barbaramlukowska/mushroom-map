@@ -87,7 +87,11 @@ export function createApp(store: Store = createStore(demoSeed)): Express {
     res.status(201).json(sighting);
   });
 
-  app.get("/api/health", (_req, res) => {
+  // Touches the database (not just the process) so an external keep-alive
+  // pinging this route prevents both Render's spin-down and Supabase's
+  // free-tier pause — the actual sources of the app's cold-start delay.
+  app.get("/api/health", async (_req, res) => {
+    await store.ping();
     res.json({ status: "ok" });
   });
 

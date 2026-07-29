@@ -1,0 +1,19 @@
+name: Keep-alive ping
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      # Hits the DB-backed health check (not just the process), so this
+      # prevents both Render's service spin-down and Supabase's free-tier
+      # project pause — see apps/api/src/app.ts.
+      - run: curl --fail --silent --show-error https://runo-api-c0n1.onrender.com/api/health

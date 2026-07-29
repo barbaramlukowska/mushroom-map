@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { DomEvent, divIcon, type DivIcon, type LatLng } from "leaflet";
 import {
   Circle,
@@ -89,6 +89,9 @@ function LocateControl() {
   const [status, setStatus] = useState<LocateStatus>("idle");
   const [position, setPosition] = useState<UserPosition | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // The first attempt runs automatically on mount; a failure there is not
+  // something the user asked for, so it stays silent (no toast).
+  const silentAttempt = useRef(true);
 
   const map = useMapEvents({
     locationfound(e) {
@@ -97,6 +100,7 @@ function LocateControl() {
     },
     locationerror(e) {
       setStatus("error");
+      if (silentAttempt.current) return;
       setErrorMessage(locateErrorMessage(e.code));
     },
   });
@@ -114,9 +118,20 @@ function LocateControl() {
     if (element) DomEvent.disableClickPropagation(element);
   }, []);
 
-  function handleLocateClick() {
+  const startLocate = useCallback(() => {
     setStatus("locating");
     map.locate({ setView: true, maxZoom: 15, enableHighAccuracy: true, timeout: 10000 });
+  }, [map]);
+
+  // Locate right after the map mounts so the user lands on their own area
+  // without an extra tap.
+  useEffect(() => {
+    startLocate();
+  }, [startLocate]);
+
+  function handleLocateClick() {
+    silentAttempt.current = false;
+    startLocate();
   }
 
   return (

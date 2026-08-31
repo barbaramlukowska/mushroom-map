@@ -10,7 +10,11 @@ import {
   type SpeciesStat,
 } from "@runo-map/shared";
 import { buildCellsQuery, parseDaysParam, parseSpeciesParam, presetToFromParam } from "@/lib/filter-params";
-import { buildSpeciesLookup, fetchSpeciesCatalog } from "@/lib/species-catalog";
+import {
+  buildSpeciesLookup,
+  fetchSpeciesCatalog,
+  type CatalogStatus,
+} from "@/lib/species-catalog";
 import { LoaderCircle } from "lucide-react";
 import { LOADING_BANNER_DELAY_MS, WAKING_THRESHOLD_MS, loadingStage, type LoadingStage } from "@/lib/loading-stage";
 import { CellDetails } from "./cell-details";
@@ -59,6 +63,8 @@ export function MapView() {
   const [openCell, setOpenCell] = useState<OccurrenceCell | null>(null);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [catalog, setCatalog] = useState<SpeciesRef[]>([]);
+  const [catalogStatus, setCatalogStatus] = useState<CatalogStatus>("loading");
+  const [catalogAttempt, setCatalogAttempt] = useState(0);
   const [stats, setStats] = useState<SpeciesStat[]>([]);
 
   // Zero cells after a successful fetch is a real answer, not a failure — but a
@@ -73,16 +79,28 @@ export function MapView() {
   const handleReported = useCallback(() => setReloadKey((key) => key + 1), []);
 
   // Fills the report combobox. Fetched once — it only changes when the monthly
-  // refresh PR lands.
+  // refresh PR lands. Refetched when the user asks, after a failure.
   useEffect(() => {
     const controller = new AbortController();
+    setCatalogStatus("loading");
     fetchSpeciesCatalog(controller.signal)
-      // Fail closed: an empty catalogue makes the form refuse to submit (its
-      // default key of 0 fails validation) and leaves the map intact.
-      .catch(() => [] as SpeciesRef[])
-      .then(setCatalog);
+      .then((refs) => {
+        setCatalog(refs);
+        setCatalogStatus("ready");
+      })
+      .catch((error) => {
+        // Unmount or a retry aborted this one; the next effect run owns the state.
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        // Fail closed: an empty catalogue makes the form refuse to submit (its
+        // default key of 0 fails validation) and leaves the map intact. The
+        // status is what stops the form showing that as an empty picker.
+        setCatalog([]);
+        setCatalogStatus("failed");
+      });
     return () => controller.abort();
-  }, []);
+  }, [catalogAttempt]);
+
+  const handleRetryCatalog = useCallback(() => setCatalogAttempt((n) => n + 1), []);
 
   // Reported species only, most-reported first: drives the filter list and the
   // keys a URL may select. Owned here, not in FilterPanel, so the visible list and
@@ -234,6 +252,8 @@ export function MapView() {
       {pendingLocation && (
         <ReportForm
           catalog={catalog}
+          catalogStatus={catalogStatus}
+          onRetryCatalog={handleRetryCatalog}
           location={pendingLocation}
           onClose={() => setPendingLocation(null)}
           onReported={handleReported}

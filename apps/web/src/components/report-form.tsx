@@ -4,7 +4,13 @@ import { useMemo, useRef, useState } from "react";
 import { Controller, useForm, type Resolver } from "react-hook-form";
 import { ChevronDown } from "lucide-react";
 import { sightingInputSchema, type SpeciesRef } from "@runo-map/shared";
-import { matchesSpeciesQuery, sortSpeciesByName, speciesLabel } from "@/lib/species-catalog";
+import {
+  matchesSpeciesQuery,
+  sortSpeciesByName,
+  speciesLabel,
+  speciesTriggerLabel,
+  type CatalogStatus,
+} from "@/lib/species-catalog";
 import { toSightingInput, type ReportFormValues } from "@/lib/report-input";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,6 +36,8 @@ interface ReportFormProps {
   // Fetched once by MapView. Empty if that failed — the form then refuses to
   // submit rather than posting a bad key.
   catalog: SpeciesRef[];
+  catalogStatus: CatalogStatus;
+  onRetryCatalog: () => void;
   location: { lat: number; lng: number };
   onClose: () => void;
   onReported: () => void;
@@ -69,9 +77,15 @@ const BADGE_CLASS =
 
 // Nothing is preselected: any default would be a species the user did not choose,
 // and GBIF's most-recorded is Amanita muscaria — photographed, not picked.
-const SPECIES_PLACEHOLDER = "Wybierz gatunek…";
 
-export function ReportForm({ catalog, location, onClose, onReported }: ReportFormProps) {
+export function ReportForm({
+  catalog,
+  catalogStatus,
+  onRetryCatalog,
+  location,
+  onClose,
+  onReported,
+}: ReportFormProps) {
   const [serverError, setServerError] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   // The species popover portals in here, not into body: the dialog's scroll lock
@@ -164,11 +178,14 @@ export function ReportForm({ catalog, location, onClose, onReported }: ReportFor
                         variant="outline"
                         role="combobox"
                         aria-expanded={pickerOpen}
+                        // An empty picker reads as a broken feature. Until the
+                        // catalogue is in, the trigger says why instead.
+                        disabled={catalogStatus !== "ready"}
                         className={`w-full justify-between font-normal ${
                           selected ? "" : "text-content-muted"
                         }`}
                       >
-                        {selected ? speciesLabel(selected) : SPECIES_PLACEHOLDER}
+                        {selected ? speciesLabel(selected) : speciesTriggerLabel(catalogStatus)}
                         <ChevronDown
                           aria-hidden
                           className={`size-4 shrink-0 opacity-60 transition-transform ${
@@ -226,6 +243,18 @@ export function ReportForm({ catalog, location, onClose, onReported }: ReportFor
                 );
               }}
             />
+            {catalogStatus === "failed" && (
+              <p className={ERROR_CLASS}>
+                Serwer mógł się usypiać i budzi się nawet minutę.{" "}
+                <button
+                  type="button"
+                  onClick={onRetryCatalog}
+                  className="underline underline-offset-2"
+                >
+                  Spróbuj ponownie
+                </button>
+              </p>
+            )}
             {errors.speciesKey && <p className={ERROR_CLASS}>{errors.speciesKey.message}</p>}
           </div>
 

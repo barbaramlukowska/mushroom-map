@@ -9,7 +9,7 @@ name: Keep-alive ping
 #
 # The real pinger is an external cron service hitting /api/health every 10
 # minutes. This workflow stays as a backup and as a manual wake-up button
-# (workflow_dispatch) — see docs/deployment.md.
+# (workflow_dispatch) — see docs/keep-alive-setup.md.
 on:
   schedule:
     - cron: '*/10 * * * *'

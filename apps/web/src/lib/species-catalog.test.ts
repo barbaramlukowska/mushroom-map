@@ -1,7 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { SpeciesRef } from "@runo-map/shared";
 import {
   buildSpeciesLookup,
+  fetchSpeciesCatalog,
+  speciesTriggerLabel,
   matchesSpeciesQuery,
   sortSpeciesByName,
   speciesLabel,
@@ -111,5 +113,91 @@ describe("matchesSpeciesQuery", () => {
 
   it("rejects a non-match", () => {
     expect(matchesSpeciesQuery(borowik, "kurka")).toBe(false);
+  });
+});
+
+describe("fetchSpeciesCatalog", () => {
+  beforeEach(() => {
+    // The retries sleep between attempts; no test should wait that out for real.
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+
+  // One queued outcome per call, so a test can describe a cold start: the first
+  // attempts fail, a later one answers. The last outcome repeats.
+  function stubFetch(outcomes: Array<() => Promise<Response>>) {
+    const calls = { count: 0 };
+    vi.stubGlobal("fetch", () => {
+      const outcome = outcomes[Math.min(calls.count, outcomes.length - 1)];
+      calls.count += 1;
+      return outcome();
+    });
+    return calls;
+  }
+
+  const ok = (body: SpeciesRef[]) => () =>
+    Promise.resolve(new Response(JSON.stringify(body), { status: 200 }));
+  // What Render answers while a spun-down instance is booting.
+  const badGateway = () => Promise.resolve(new Response("", { status: 502 }));
+  const connectionRefused = () => Promise.reject(new TypeError("fetch failed"));
+
+  it("returns the catalogue when the API answers straight away", async () => {
+    const calls = stubFetch([ok([borowik])]);
+    const result = fetchSpeciesCatalog();
+    await vi.runAllTimersAsync();
+    expect(await result).toEqual([borowik]);
+    expect(calls.count).toBe(1);
+  });
+
+  it("retries a cold-starting API and returns the catalogue once it wakes up", async () => {
+    const calls = stubFetch([connectionRefused, badGateway, ok([borowik])]);
+    const result = fetchSpeciesCatalog();
+    await vi.runAllTimersAsync();
+    expect(await result).toEqual([borowik]);
+    expect(calls.count).toBe(3);
+  });
+
+  // MapView aborts on unmount. Retrying past that would keep the request alive
+  // and hand a result to a component that is gone.
+  it("stops on the first attempt when the caller aborts", async () => {
+    const controller = new AbortController();
+    const calls = stubFetch([
+      () => {
+        controller.abort();
+        return Promise.reject(new DOMException("The operation was aborted.", "AbortError"));
+      },
+    ]);
+    const result = fetchSpeciesCatalog(controller.signal).catch((error: unknown) => error);
+    await vi.runAllTimersAsync();
+    expect((await result as Error).name).toBe("AbortError");
+    expect(calls.count).toBe(1);
+  });
+
+  it("gives up and throws once every attempt has failed", async () => {
+    const calls = stubFetch([badGateway]);
+    const result = fetchSpeciesCatalog().catch((error: unknown) => error);
+    await vi.runAllTimersAsync();
+    expect(await result).toBeInstanceOf(Error);
+    expect(calls.count).toBeGreaterThan(1);
+  });
+});
+
+describe("speciesTriggerLabel", () => {
+  // Nothing is preselected, so the trigger is the only place the picker can admit
+  // that the list behind it is not there yet.
+  it("invites a choice once the catalogue is in", () => {
+    expect(speciesTriggerLabel("ready")).toBe("Wybierz gatunek…");
+  });
+
+  it("says the catalogue is still coming rather than promising a list", () => {
+    expect(speciesTriggerLabel("loading")).toBe("Wczytywanie gatunków…");
+  });
+
+  it("names the failure instead of showing an empty picker", () => {
+    expect(speciesTriggerLabel("failed")).toBe("Nie udało się wczytać gatunków");
   });
 });

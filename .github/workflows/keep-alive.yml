@@ -1,5 +1,15 @@
 name: Keep-alive ping
 
+# Best-effort only — this is NOT what keeps the API awake.
+#
+# GitHub throttles scheduled workflows heavily: measured over 40 runs of this
+# one, the median gap between runs was 130 minutes and the longest was 12 hours.
+# Only 1 gap in 39 landed inside the 15 minutes of idle time it takes Render to
+# spin the instance down. The cron below asks for 10 minutes and does not get it.
+#
+# The real pinger is an external cron service hitting /api/health every 10
+# minutes. This workflow stays as a backup and as a manual wake-up button
+# (workflow_dispatch) — see docs/keep-alive-setup.md.
 on:
   schedule:
     - cron: '*/10 * * * *'
@@ -11,9 +21,36 @@ permissions:
 jobs:
   ping:
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 5
+    # Job level, not step level: a step's own `env` is not visible to its `if`.
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
     steps:
       # Hits the DB-backed health check (not just the process), so this
       # prevents both Render's service spin-down and Supabase's free-tier
       # project pause — see apps/api/src/app.ts.
-      - run: curl --fail --silent --show-error https://runo-api-c0n1.onrender.com/api/health
+      #
+      # Render's free tier spins the instance down, so a cold start (or a
+      # restart mid-request) can drop the connection — curl exit 56. Retry
+      # instead of failing the run on the first dropped connection.
+      - name: Ping API health check
+        run: |
+          curl --fail --silent --show-error \
+            --connect-timeout 10 --max-time 60 \
+            --retry 4 --retry-delay 15 --retry-all-errors \
+            https://runo-api-c0n1.onrender.com/api/health
+
+      # The step above reaches Postgres through the connection pooler. It is
+      # unclear whether Supabase's inactivity scanner counts that, or only
+      # requests to its own API gateway — so hit the gateway too. The REST root
+      # returns the API schema: no table access, no RLS involved, always 200
+      # with a valid key. Skipped (not failed) while the secrets are unset.
+      - name: Ping Supabase REST API
+        if: env.SUPABASE_URL != '' && env.SUPABASE_ANON_KEY != ''
+        run: |
+          curl --fail --silent --show-error \
+            --connect-timeout 10 --max-time 30 \
+            --retry 3 --retry-delay 5 --retry-all-errors \
+            --header "apikey: $SUPABASE_ANON_KEY" \
+            "$SUPABASE_URL/rest/v1/" > /dev/null

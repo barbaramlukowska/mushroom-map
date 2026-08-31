@@ -9,16 +9,30 @@ onlyBuiltDependencies:
   - esbuild
 
 # Supply chain (OWASP A03): pin transitive deps to advisory-free versions.
-# - postcss <8.4.31 fix: GHSA-qx2v-qp2m-jg93 (ReDoS), pulled in by next
+# - postcss <8.5.23 fix: GHSA-fxqj-rqcc-2cmp, pulled in by next/vite/shadcn
+# - nanoid <3.3.18 fix: GHSA-28wg-ghj8-5hjv, GHSA-2v37-7h3g-55p8, dep of postcss
+# - brace-expansion <5.0.9 fix: GHSA-rgw5-rvv9-x895 (ReDoS)
+# - fast-uri <3.1.5 fix: GHSA-7p8r-x3mc-p8w7
+# - ip-address <10.3.1 fix: GHSA-22jq-vg5j-6vgg, GHSA-4xrf-jv44-h6hh,
+#   GHSA-mwp4-54f8-5fhr; dep of express-rate-limit (production)
+# - js-yaml <4.3.1 fix: GHSA-5p4m-2wfm-xmqj, pulled in by shadcn (cosmiconfig)
+# - undici <7.29.0 fix: GHSA-4cwx-7wf7-3272 + 4 more, dev-only (shadcn CLI)
+# - hono <4.12.34 fix: GHSA-54fx-42gc-7vw4 + 3 more, dev-only (@prisma/dev, shadcn)
+# - deepmerge-ts <8.0.0 fix: GHSA-ggr8-5vv4-36mx, dev-only (@prisma/config);
+#   major bump, but same dual ESM/CJS exports as 7.x
 # - @hono/node-server <2.0.5 fix: GHSA-frvp-7c67-39w9, dev-only tooling
-# - brace-expansion <5.0.8 fix: GHSA-mh99-v99m-4gvg (ReDoS)
-# - fast-uri <3.1.4 fix: GHSA-v2hh-gcrm-f6hx
 # - sharp <0.35.0 fix: GHSA-f88m-g3jw-g9cj, optional dep of next
 # - valibot <1.4.2 fix: GHSA-5qjj-4xww-7phc, pulled in by @prisma/dev
 overrides:
-  postcss: "^8.5.19"
+  postcss: "^8.5.23"
+  nanoid: "^3.3.18"
+  brace-expansion: "^5.0.9"
+  fast-uri: "^3.1.5"
+  ip-address: "^10.3.1"
+  js-yaml: "^4.3.1"
+  undici: "^7.29.0"
+  hono: "^4.12.34"
+  deepmerge-ts: "^8.0.0"
   "@hono/node-server": "^2.0.5"
-  brace-expansion: "^5.0.8"
-  fast-uri: "^3.1.4"
   sharp: "^0.35.0"
   valibot: "^1.4.2"

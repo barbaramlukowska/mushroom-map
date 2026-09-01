@@ -3,140 +3,147 @@
     "taxonKey": 8168319,
     "scientificName": "Amanita muscaria",
     "namePl": "Muchomor czerwony",
-    "occurrenceCount": 2974,
+    "occurrenceCount": 2998,
     "isProtected": false
   },
   {
     "taxonKey": 9072021,
     "scientificName": "Laetiporus sulphureus",
     "namePl": "Żółciak siarkowy",
-    "occurrenceCount": 1533,
+    "occurrenceCount": 1569,
     "isProtected": false
   },
   {
     "taxonKey": 2542395,
     "scientificName": "Fomitopsis pinicola",
     "namePl": "Pniarek obrzeżony",
-    "occurrenceCount": 1373,
+    "occurrenceCount": 1406,
     "isProtected": false
   },
   {
     "taxonKey": 8068867,
     "scientificName": "Fomes fomentarius",
     "namePl": "Hubiak pospolity",
-    "occurrenceCount": 1292,
+    "occurrenceCount": 1315,
     "isProtected": false
   },
   {
     "taxonKey": 2548311,
     "scientificName": "Trametes versicolor",
     "namePl": "Wrośniak różnobarwny",
-    "occurrenceCount": 1256,
-    "isProtected": false
-  },
-  {
-    "taxonKey": 7832732,
-    "scientificName": "Imleria badia",
-    "namePl": "Podgrzybek brunatny",
-    "occurrenceCount": 1190,
+    "occurrenceCount": 1277,
     "isProtected": false
   },
   {
     "taxonKey": 3293632,
     "scientificName": "Hypholoma fasciculare",
     "namePl": "Maślanka wiązkowa",
-    "occurrenceCount": 1186,
+    "occurrenceCount": 1214,
     "isProtected": false
   },
   {
     "taxonKey": 5954958,
     "scientificName": "Boletus edulis",
     "namePl": "Borowik szlachetny",
-    "occurrenceCount": 1179,
+    "occurrenceCount": 1211,
     "isProtected": false
   },
   {
-    "taxonKey": 9819973,
-    "scientificName": "Fomitopsis betulina",
-    "namePl": "Białoporek brzozowy",
-    "occurrenceCount": 1059,
+    "taxonKey": 7832732,
+    "scientificName": "Imleria badia",
+    "namePl": "Podgrzybek brunatny",
+    "occurrenceCount": 1209,
     "isProtected": false
   },
   {
     "taxonKey": 7496350,
     "scientificName": "Amanita rubescens",
     "namePl": "Muchomor czerwieniejący",
-    "occurrenceCount": 990,
+    "occurrenceCount": 1079,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 9819973,
+    "scientificName": "Fomitopsis betulina",
+    "namePl": "Białoporek brzozowy",
+    "occurrenceCount": 1064,
     "isProtected": false
   },
   {
     "taxonKey": 5241128,
     "scientificName": "Schizophyllum commune",
     "namePl": "Rozszczepka pospolita",
-    "occurrenceCount": 959,
+    "occurrenceCount": 968,
     "isProtected": false
   },
   {
     "taxonKey": 2550247,
     "scientificName": "Sparassis crispa",
     "namePl": "Siedzuń sosnowy",
-    "occurrenceCount": 952,
+    "occurrenceCount": 951,
     "isProtected": false
   },
   {
     "taxonKey": 3328320,
     "scientificName": "Amanita citrina",
     "namePl": "Muchomor cytrynowy",
-    "occurrenceCount": 908,
+    "occurrenceCount": 936,
     "isProtected": false
   },
   {
     "taxonKey": 8914748,
     "scientificName": "Macrolepiota procera",
     "namePl": "Czubajka kania",
-    "occurrenceCount": 897,
-    "isProtected": false
-  },
-  {
-    "taxonKey": 2530983,
-    "scientificName": "Laccaria amethystina",
-    "namePl": "Lakówka ametystowa",
-    "occurrenceCount": 807,
+    "occurrenceCount": 927,
     "isProtected": false
   },
   {
     "taxonKey": 7987658,
     "scientificName": "Coprinus comatus",
     "namePl": "Czernidłak kołpakowaty",
-    "occurrenceCount": 804,
+    "occurrenceCount": 848,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 2530983,
+    "scientificName": "Laccaria amethystina",
+    "namePl": "Lakówka ametystowa",
+    "occurrenceCount": 822,
     "isProtected": false
   },
   {
     "taxonKey": 5243258,
     "scientificName": "Lycoperdon perlatum",
     "namePl": "Purchawka chropowata",
-    "occurrenceCount": 791,
+    "occurrenceCount": 793,
     "isProtected": false
   },
   {
     "taxonKey": 5240002,
     "scientificName": "Paxillus involutus",
     "namePl": "Krowiak podwinięty",
-    "occurrenceCount": 703,
-    "isProtected": false
-  },
-  {
-    "taxonKey": 2553128,
-    "scientificName": "Stereum hirsutum",
-    "namePl": "Skórnik szorstki",
-    "occurrenceCount": 630,
+    "occurrenceCount": 708,
     "isProtected": false
   },
   {
     "taxonKey": 5249504,
     "scientificName": "Cantharellus cibarius",
     "namePl": "Pieprznik jadalny",
-    "occurrenceCount": 618,
+    "occurrenceCount": 656,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 2553128,
+    "scientificName": "Stereum hirsutum",
+    "namePl": "Skórnik szorstki",
+    "occurrenceCount": 641,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 5249271,
+    "scientificName": "Auricularia auricula-judae",
+    "namePl": "Uszak bzowy",
+    "occurrenceCount": 611,
     "isProtected": false
   },
   {
@@ -147,45 +154,52 @@
     "isProtected": false
   },
   {
-    "taxonKey": 5249271,
-    "scientificName": "Auricularia auricula-judae",
-    "namePl": "Uszak bzowy",
-    "occurrenceCount": 603,
-    "isProtected": false
-  },
-  {
     "taxonKey": 5243756,
     "scientificName": "Gymnopus dryophilus",
     "namePl": "Łysostopek pospolity",
-    "occurrenceCount": 587,
+    "occurrenceCount": 586,
     "isProtected": false
   },
   {
     "taxonKey": 2543824,
     "scientificName": "Bjerkandera adusta",
     "namePl": "Szaroporka podpalana",
-    "occurrenceCount": 579,
+    "occurrenceCount": 582,
     "isProtected": false
   },
   {
     "taxonKey": 10852503,
     "scientificName": "Apioperdon pyriforme",
     "namePl": "Purchawka gruszkowata",
-    "occurrenceCount": 535,
+    "occurrenceCount": 537,
     "isProtected": false
   },
   {
     "taxonKey": 2521089,
     "scientificName": "Inonotus obliquus",
     "namePl": "Błyskoporek podkorowy",
-    "occurrenceCount": 522,
+    "occurrenceCount": 523,
     "isProtected": true
   },
   {
     "taxonKey": 2531072,
     "scientificName": "Clitocybe nebularis",
     "namePl": "Lejkówka szarawa",
-    "occurrenceCount": 515,
+    "occurrenceCount": 516,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 2547092,
+    "scientificName": "Cerioporus squamosus",
+    "namePl": "Żagiew Łuskowata",
+    "occurrenceCount": 508,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 5239982,
+    "scientificName": "Scleroderma citrinum",
+    "namePl": "Tęgoskór cytrynowy",
+    "occurrenceCount": 501,
     "isProtected": false
   },
   {
@@ -196,31 +210,24 @@
     "isProtected": false
   },
   {
-    "taxonKey": 2533962,
-    "scientificName": "Kuehneromyces mutabilis",
-    "namePl": "Łuskwiak zmienny",
-    "occurrenceCount": 474,
-    "isProtected": false
-  },
-  {
-    "taxonKey": 5239982,
-    "scientificName": "Scleroderma citrinum",
-    "namePl": "Tęgoskór cytrynowy",
-    "occurrenceCount": 471,
-    "isProtected": false
-  },
-  {
     "taxonKey": 2531012,
     "scientificName": "Fistulina hepatica",
     "namePl": "Ozorek dębowy",
-    "occurrenceCount": 466,
+    "occurrenceCount": 490,
     "isProtected": true
   },
   {
-    "taxonKey": 2547092,
-    "scientificName": "Cerioporus squamosus",
-    "namePl": "Żagiew Łuskowata",
-    "occurrenceCount": 462,
+    "taxonKey": 2533962,
+    "scientificName": "Kuehneromyces mutabilis",
+    "namePl": "Łuskwiak zmienny",
+    "occurrenceCount": 486,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 2550493,
+    "scientificName": "Artomyces pyxidatus",
+    "namePl": "Świecznik rozgałęziony",
+    "occurrenceCount": 469,
     "isProtected": false
   },
   {
@@ -234,21 +241,28 @@
     "taxonKey": 7446067,
     "scientificName": "Pluteus cervinus",
     "namePl": "Drobnołuszczak jeleni",
-    "occurrenceCount": 454,
+    "occurrenceCount": 458,
     "isProtected": false
   },
   {
     "taxonKey": 3314876,
     "scientificName": "Phallus impudicus",
     "namePl": "Sromotnik bezwstydny",
-    "occurrenceCount": 439,
+    "occurrenceCount": 444,
     "isProtected": false
   },
   {
-    "taxonKey": 2550493,
-    "scientificName": "Artomyces pyxidatus",
-    "namePl": "Świecznik rozgałęziony",
-    "occurrenceCount": 434,
+    "taxonKey": 7765582,
+    "scientificName": "Amanita fulva",
+    "namePl": "Muchomor rdzawobrązowy",
+    "occurrenceCount": 431,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 2531814,
+    "scientificName": "Tricholomopsis rutilans",
+    "namePl": "Rycerzyk czerwonozłoty",
+    "occurrenceCount": 430,
     "isProtected": false
   },
   {
@@ -259,37 +273,30 @@
     "isProtected": false
   },
   {
-    "taxonKey": 2531814,
-    "scientificName": "Tricholomopsis rutilans",
-    "namePl": "Rycerzyk czerwonozłoty",
-    "occurrenceCount": 425,
-    "isProtected": false
-  },
-  {
-    "taxonKey": 7765582,
-    "scientificName": "Amanita fulva",
-    "namePl": "Muchomor rdzawobrązowy",
-    "occurrenceCount": 421,
-    "isProtected": false
-  },
-  {
     "taxonKey": 12092733,
     "scientificName": "Collybiopsis peronata",
     "namePl": "Łysostopek cierpki",
-    "occurrenceCount": 421,
+    "occurrenceCount": 425,
     "isProtected": false
   },
   {
     "taxonKey": 2533424,
     "scientificName": "Hypholoma lateritium",
     "namePl": "Maślanka ceglasta",
-    "occurrenceCount": 419,
+    "occurrenceCount": 425,
     "isProtected": false
   },
   {
     "taxonKey": 2534578,
     "scientificName": "Coprinellus micaceus",
     "namePl": "Czernidłak Błyszczący",
+    "occurrenceCount": 407,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 2537250,
+    "scientificName": "Marasmius oreades",
+    "namePl": "Twardzioszek przydrożny",
     "occurrenceCount": 406,
     "isProtected": false
   },
@@ -297,6 +304,13 @@
     "taxonKey": 2532944,
     "scientificName": "Chondrostereum purpureum",
     "namePl": "Chrząstkoskórnik purpurowy",
+    "occurrenceCount": 404,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 2545670,
+    "scientificName": "Daedaleopsis confragosa",
+    "namePl": "Gmatwica chropowata",
     "occurrenceCount": 399,
     "isProtected": false
   },
@@ -308,108 +322,101 @@
     "isProtected": false
   },
   {
-    "taxonKey": 2545670,
-    "scientificName": "Daedaleopsis confragosa",
-    "namePl": "Gmatwica chropowata",
-    "occurrenceCount": 394,
-    "isProtected": false
-  },
-  {
     "taxonKey": 2526880,
     "scientificName": "Mycena galericulata",
     "namePl": "Grzybówka hełmiasta",
-    "occurrenceCount": 383,
-    "isProtected": false
-  },
-  {
-    "taxonKey": 2526530,
-    "scientificName": "Pleurotus ostreatus",
-    "namePl": "Boczniak ostrygowaty",
-    "occurrenceCount": 382,
+    "occurrenceCount": 388,
     "isProtected": false
   },
   {
     "taxonKey": 2534625,
     "scientificName": "Coprinellus disseminatus",
     "namePl": "Czernidłak gromadny",
-    "occurrenceCount": 380,
+    "occurrenceCount": 386,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 2526530,
+    "scientificName": "Pleurotus ostreatus",
+    "namePl": "Boczniak ostrygowaty",
+    "occurrenceCount": 384,
     "isProtected": false
   },
   {
     "taxonKey": 9141390,
     "scientificName": "Leccinum scabrum",
     "namePl": "Koźlarz babka",
-    "occurrenceCount": 378,
-    "isProtected": false
-  },
-  {
-    "taxonKey": 9035469,
-    "scientificName": "Porodaedalea pini",
-    "namePl": "Czyreń sosnowy",
-    "occurrenceCount": 375,
+    "occurrenceCount": 376,
     "isProtected": false
   },
   {
     "taxonKey": 2549834,
     "scientificName": "Ganoderma applanatum",
     "namePl": "Lakownica spłaszczona",
-    "occurrenceCount": 367,
+    "occurrenceCount": 375,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 2542126,
+    "scientificName": "Phaeolus schweinitzii",
+    "namePl": "Murszak rdzawy",
+    "occurrenceCount": 373,
     "isProtected": false
   },
   {
     "taxonKey": 2526725,
     "scientificName": "Plicaturopsis crispa",
     "namePl": "Fałdówka kędzierzawa",
-    "occurrenceCount": 363,
+    "occurrenceCount": 361,
     "isProtected": false
   },
   {
-    "taxonKey": 2537250,
-    "scientificName": "Marasmius oreades",
-    "namePl": "Twardzioszek przydrożny",
-    "occurrenceCount": 362,
+    "taxonKey": 9035469,
+    "scientificName": "Porodaedalea pini",
+    "namePl": "Czyreń sosnowy",
+    "occurrenceCount": 352,
     "isProtected": false
   },
   {
     "taxonKey": 5248458,
     "scientificName": "Auriscalpium vulgare",
     "namePl": "Szyszkolubka kolczasta",
-    "occurrenceCount": 342,
-    "isProtected": false
-  },
-  {
-    "taxonKey": 8032257,
-    "scientificName": "Trametes hirsuta",
-    "namePl": "Wrośniak szorstki",
-    "occurrenceCount": 337,
+    "occurrenceCount": 343,
     "isProtected": false
   },
   {
     "taxonKey": 8961574,
     "scientificName": "Amanita pantherina",
     "namePl": "Muchomor plamisty",
-    "occurrenceCount": 333,
+    "occurrenceCount": 337,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 8032257,
+    "scientificName": "Trametes hirsuta",
+    "namePl": "Wrośniak szorstki",
+    "occurrenceCount": 335,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 2524910,
+    "scientificName": "Tylopilus felleus",
+    "namePl": "Goryczak żółciowy",
+    "occurrenceCount": 335,
     "isProtected": false
   },
   {
     "taxonKey": 5248616,
     "scientificName": "Lactarius quietus",
     "namePl": "Mleczaj dębowy",
-    "occurrenceCount": 332,
+    "occurrenceCount": 333,
     "isProtected": false
   },
   {
     "taxonKey": 2545089,
     "scientificName": "Phlebia radiata",
     "namePl": "Żylak promienisty",
-    "occurrenceCount": 332,
-    "isProtected": false
-  },
-  {
-    "taxonKey": 2551968,
-    "scientificName": "Heterobasidion annosum",
-    "namePl": "Korzeniowiec wieloletni",
-    "occurrenceCount": 327,
+    "occurrenceCount": 328,
     "isProtected": false
   },
   {
@@ -420,24 +427,45 @@
     "isProtected": false
   },
   {
+    "taxonKey": 2551968,
+    "scientificName": "Heterobasidion annosum",
+    "namePl": "Korzeniowiec wieloletni",
+    "occurrenceCount": 323,
+    "isProtected": false
+  },
+  {
     "taxonKey": 4911751,
     "scientificName": "Mycena epipterygia",
     "namePl": "Grzybówka cytrynowa",
+    "occurrenceCount": 320,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 5240325,
+    "scientificName": "Amanita phalloides",
+    "namePl": "Muchomor sromotnikowy",
+    "occurrenceCount": 319,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 7693097,
+    "scientificName": "Tapinella atrotomentosa",
+    "namePl": "Krowiak aksamitny",
     "occurrenceCount": 317,
     "isProtected": false
   },
   {
-    "taxonKey": 2542126,
-    "scientificName": "Phaeolus schweinitzii",
-    "namePl": "Murszak rdzawy",
-    "occurrenceCount": 312,
+    "taxonKey": 5239864,
+    "scientificName": "Suillus grevillei",
+    "namePl": "Maślak żółty",
+    "occurrenceCount": 315,
     "isProtected": false
   },
   {
-    "taxonKey": 2524910,
-    "scientificName": "Tylopilus felleus",
-    "namePl": "Goryczak żółciowy",
-    "occurrenceCount": 312,
+    "taxonKey": 5243151,
+    "scientificName": "Cyathus striatus",
+    "namePl": "Kubek prążkowany",
+    "occurrenceCount": 314,
     "isProtected": false
   },
   {
@@ -448,31 +476,10 @@
     "isProtected": false
   },
   {
-    "taxonKey": 5239864,
-    "scientificName": "Suillus grevillei",
-    "namePl": "Maślak żółty",
-    "occurrenceCount": 308,
-    "isProtected": false
-  },
-  {
-    "taxonKey": 5240325,
-    "scientificName": "Amanita phalloides",
-    "namePl": "Muchomor sromotnikowy",
-    "occurrenceCount": 306,
-    "isProtected": false
-  },
-  {
-    "taxonKey": 5243151,
-    "scientificName": "Cyathus striatus",
-    "namePl": "Kubek prążkowany",
-    "occurrenceCount": 305,
-    "isProtected": false
-  },
-  {
     "taxonKey": 2544300,
     "scientificName": "Phlebia tremellosa",
     "namePl": "Strocznik trzęsakowaty",
-    "occurrenceCount": 301,
+    "occurrenceCount": 297,
     "isProtected": false
   },
   {
@@ -486,13 +493,13 @@
     "taxonKey": 2533359,
     "scientificName": "Stropharia aeruginosa",
     "namePl": "Pierścieniak grynszpanowy",
-    "occurrenceCount": 289,
+    "occurrenceCount": 292,
     "isProtected": false
   },
   {
-    "taxonKey": 7693097,
-    "scientificName": "Tapinella atrotomentosa",
-    "namePl": "Krowiak aksamitny",
+    "taxonKey": 2536058,
+    "scientificName": "Calvatia gigantea",
+    "namePl": "Czasznica olbrzymia",
     "occurrenceCount": 287,
     "isProtected": false
   },
@@ -500,28 +507,28 @@
     "taxonKey": 8908488,
     "scientificName": "Marasmius rotula",
     "namePl": "Twardzioszek obrożowy",
-    "occurrenceCount": 281,
+    "occurrenceCount": 283,
     "isProtected": false
   },
   {
     "taxonKey": 2554662,
     "scientificName": "Craterellus cornucopioides",
     "namePl": "Lejkowiec Dęty",
-    "occurrenceCount": 280,
+    "occurrenceCount": 277,
     "isProtected": false
   },
   {
-    "taxonKey": 2536058,
-    "scientificName": "Calvatia gigantea",
-    "namePl": "Czasznica olbrzymia",
-    "occurrenceCount": 274,
+    "taxonKey": 2540761,
+    "scientificName": "Meripilus giganteus",
+    "namePl": "Wachlarzowiec olbrzymi",
+    "occurrenceCount": 271,
     "isProtected": false
   },
   {
-    "taxonKey": 9208081,
-    "scientificName": "Trametes gibbosa",
-    "namePl": "Wrośniak garbaty",
-    "occurrenceCount": 267,
+    "taxonKey": 2519915,
+    "scientificName": "Coltricia perennis",
+    "namePl": "Stułka piaskowa",
+    "occurrenceCount": 268,
     "isProtected": false
   },
   {
@@ -532,73 +539,45 @@
     "isProtected": false
   },
   {
+    "taxonKey": 9208081,
+    "scientificName": "Trametes gibbosa",
+    "namePl": "Wrośniak garbaty",
+    "occurrenceCount": 259,
+    "isProtected": false
+  },
+  {
     "taxonKey": 7777157,
     "scientificName": "Suillus luteus",
     "namePl": "Maślak zwyczajny",
-    "occurrenceCount": 263,
-    "isProtected": false
-  },
-  {
-    "taxonKey": 2519915,
-    "scientificName": "Coltricia perennis",
-    "namePl": "Stułka piaskowa",
-    "occurrenceCount": 262,
-    "isProtected": false
-  },
-  {
-    "taxonKey": 9227816,
-    "scientificName": "Trametes cinnabarina",
-    "namePl": "Gęstoporek cynobrowy",
-    "occurrenceCount": 262,
-    "isProtected": false
-  },
-  {
-    "taxonKey": 2540761,
-    "scientificName": "Meripilus giganteus",
-    "namePl": "Wachlarzowiec olbrzymi",
-    "occurrenceCount": 258,
-    "isProtected": false
-  },
-  {
-    "taxonKey": 7838425,
-    "scientificName": "Lentinus brumalis",
-    "namePl": "Żagiew zimowa",
     "occurrenceCount": 257,
-    "isProtected": false
-  },
-  {
-    "taxonKey": 5248532,
-    "scientificName": "Hericium coralloides",
-    "namePl": "Soplówka bukowa",
-    "occurrenceCount": 253,
-    "isProtected": true
-  },
-  {
-    "taxonKey": 2536891,
-    "scientificName": "Armillaria mellea",
-    "namePl": "Opieńka miodowa",
-    "occurrenceCount": 252,
     "isProtected": false
   },
   {
     "taxonKey": 5248684,
     "scientificName": "Lactarius rufus",
     "namePl": "Mleczaj rudy",
-    "occurrenceCount": 252,
+    "occurrenceCount": 253,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 2536891,
+    "scientificName": "Armillaria mellea",
+    "namePl": "Opieńka miodowa",
+    "occurrenceCount": 251,
     "isProtected": false
   },
   {
     "taxonKey": 7978027,
     "scientificName": "Paralepista flaccida",
     "namePl": "Gąsówka rudawa",
-    "occurrenceCount": 252,
+    "occurrenceCount": 251,
     "isProtected": false
   },
   {
-    "taxonKey": 5240994,
-    "scientificName": "Crepidotus variabilis",
-    "namePl": "Ciżmówka zmienna",
-    "occurrenceCount": 249,
+    "taxonKey": 7838425,
+    "scientificName": "Lentinus brumalis",
+    "namePl": "Żagiew zimowa",
+    "occurrenceCount": 250,
     "isProtected": false
   },
   {
@@ -609,6 +588,20 @@
     "isProtected": false
   },
   {
+    "taxonKey": 5240994,
+    "scientificName": "Crepidotus variabilis",
+    "namePl": "Ciżmówka zmienna",
+    "occurrenceCount": 248,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 5248532,
+    "scientificName": "Hericium coralloides",
+    "namePl": "Soplówka bukowa",
+    "occurrenceCount": 248,
+    "isProtected": true
+  },
+  {
     "taxonKey": 9118025,
     "scientificName": "Panellus stipticus",
     "namePl": "Łycznik ochrowy",
@@ -616,10 +609,10 @@
     "isProtected": false
   },
   {
-    "taxonKey": 2551542,
-    "scientificName": "Russula cyanoxantha",
-    "namePl": "Gołąbek zielonawofioletowy",
-    "occurrenceCount": 244,
+    "taxonKey": 9227816,
+    "scientificName": "Trametes cinnabarina",
+    "namePl": "Gęstoporek cynobrowy",
+    "occurrenceCount": 246,
     "isProtected": false
   },
   {
@@ -630,108 +623,101 @@
     "isProtected": false
   },
   {
-    "taxonKey": 2520862,
-    "scientificName": "Phellinus igniarius",
-    "namePl": "Czyreń ogniowy",
-    "occurrenceCount": 241,
-    "isProtected": false
-  },
-  {
-    "taxonKey": 2551419,
-    "scientificName": "Russula ochroleuca",
-    "namePl": "Gołąbek brudnożółty",
-    "occurrenceCount": 236,
+    "taxonKey": 2551542,
+    "scientificName": "Russula cyanoxantha",
+    "namePl": "Gołąbek zielonawofioletowy",
+    "occurrenceCount": 243,
     "isProtected": false
   },
   {
     "taxonKey": 8031042,
     "scientificName": "Hymenopellis radicata",
     "namePl": "Błonoskórek korzeniasty",
-    "occurrenceCount": 235,
+    "occurrenceCount": 241,
     "isProtected": false
   },
   {
     "taxonKey": 12008655,
     "scientificName": "Candolleomyces candolleanus",
     "namePl": "Kruchaweczka zaroślowa",
-    "occurrenceCount": 234,
+    "occurrenceCount": 239,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 2520862,
+    "scientificName": "Phellinus igniarius",
+    "namePl": "Czyreń ogniowy",
+    "occurrenceCount": 239,
     "isProtected": false
   },
   {
     "taxonKey": 7769302,
     "scientificName": "Gymnopus androsaceus",
     "namePl": null,
-    "occurrenceCount": 234,
-    "isProtected": false
-  },
-  {
-    "taxonKey": 4911815,
-    "scientificName": "Mycena galopus",
-    "namePl": "Grzybówka mleczajowa",
     "occurrenceCount": 233,
-    "isProtected": false
-  },
-  {
-    "taxonKey": 3341441,
-    "scientificName": "Flammulina velutipes",
-    "namePl": "Płomiennica zimowa",
-    "occurrenceCount": 232,
-    "isProtected": false
-  },
-  {
-    "taxonKey": 2522935,
-    "scientificName": "Thelephora terrestris",
-    "namePl": "Chropiatka naziemna",
-    "occurrenceCount": 232,
     "isProtected": false
   },
   {
     "taxonKey": 9723190,
     "scientificName": "Neoboletus erythropus",
     "namePl": "Krasnoborowik ceglastopory",
-    "occurrenceCount": 228,
+    "occurrenceCount": 233,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 2551419,
+    "scientificName": "Russula ochroleuca",
+    "namePl": "Gołąbek brudnożółty",
+    "occurrenceCount": 232,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 3341441,
+    "scientificName": "Flammulina velutipes",
+    "namePl": "Płomiennica zimowa",
+    "occurrenceCount": 230,
     "isProtected": false
   },
   {
     "taxonKey": 2519457,
     "scientificName": "Xerocomus subtomentosus",
     "namePl": "Borowik zajęczy",
-    "occurrenceCount": 227,
+    "occurrenceCount": 230,
     "isProtected": false
   },
   {
-    "taxonKey": 5249353,
-    "scientificName": "Pseudohydnum gelatinosum",
-    "namePl": "Galaretek kolczasty",
-    "occurrenceCount": 221,
+    "taxonKey": 4911815,
+    "scientificName": "Mycena galopus",
+    "namePl": "Grzybówka mleczajowa",
+    "occurrenceCount": 229,
     "isProtected": false
   },
   {
-    "taxonKey": 8047444,
-    "scientificName": "Typhula fistulosa",
-    "namePl": "Pałecznica rurkowata",
-    "occurrenceCount": 217,
-    "isProtected": false
-  },
-  {
-    "taxonKey": 8796319,
-    "scientificName": "Tubaria furfuracea",
-    "namePl": "Trąbka otrębiasta",
-    "occurrenceCount": 216,
-    "isProtected": false
-  },
-  {
-    "taxonKey": 2554355,
-    "scientificName": "Geastrum fimbriatum",
-    "namePl": "Gwiazdosz frędzelkowany",
-    "occurrenceCount": 214,
+    "taxonKey": 2522935,
+    "scientificName": "Thelephora terrestris",
+    "namePl": "Chropiatka naziemna",
+    "occurrenceCount": 228,
     "isProtected": false
   },
   {
     "taxonKey": 2538864,
     "scientificName": "Ampulloclitocybe clavipes",
     "namePl": "Białolejkówka buławotrzonowa",
-    "occurrenceCount": 211,
+    "occurrenceCount": 212,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 2554355,
+    "scientificName": "Geastrum fimbriatum",
+    "namePl": "Gwiazdosz frędzelkowany",
+    "occurrenceCount": 212,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 2519770,
+    "scientificName": "Hymenochaete rubiginosa",
+    "namePl": "Szczecinkowiec rdzawy",
+    "occurrenceCount": 212,
     "isProtected": false
   },
   {
@@ -742,10 +728,17 @@
     "isProtected": false
   },
   {
-    "taxonKey": 2519770,
-    "scientificName": "Hymenochaete rubiginosa",
-    "namePl": "Szczecinkowiec rdzawy",
-    "occurrenceCount": 209,
+    "taxonKey": 5249353,
+    "scientificName": "Pseudohydnum gelatinosum",
+    "namePl": "Galaretek kolczasty",
+    "occurrenceCount": 207,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 8047444,
+    "scientificName": "Typhula fistulosa",
+    "namePl": "Pałecznica rurkowata",
+    "occurrenceCount": 206,
     "isProtected": false
   },
   {
@@ -756,66 +749,59 @@
     "isProtected": false
   },
   {
+    "taxonKey": 8796319,
+    "scientificName": "Tubaria furfuracea",
+    "namePl": "Trąbka otrębiasta",
+    "occurrenceCount": 203,
+    "isProtected": false
+  },
+  {
     "taxonKey": 2536899,
     "scientificName": "Armillaria ostoyae",
     "namePl": "Opieńka ciemna",
-    "occurrenceCount": 198,
+    "occurrenceCount": 201,
     "isProtected": false
   },
   {
     "taxonKey": 5239483,
     "scientificName": "Clathrus archeri",
     "namePl": "Okratek australijski",
-    "occurrenceCount": 194,
-    "isProtected": false
-  },
-  {
-    "taxonKey": 2538748,
-    "scientificName": "Hygrophorus hypothejus",
-    "namePl": "Wodnicha późna",
-    "occurrenceCount": 194,
+    "occurrenceCount": 199,
     "isProtected": false
   },
   {
     "taxonKey": 2531146,
     "scientificName": "Infundibulicybe gibba",
     "namePl": "Lejkówka żółtobrązowa",
-    "occurrenceCount": 192,
+    "occurrenceCount": 197,
     "isProtected": false
   },
   {
-    "taxonKey": 2530966,
-    "scientificName": "Laccaria proxima",
-    "namePl": "Lakówka okazała",
-    "occurrenceCount": 190,
-    "isProtected": false
-  },
-  {
-    "taxonKey": 2551392,
-    "scientificName": "Russula risigallina",
-    "namePl": "Gołąbek zmiennobarwny",
-    "occurrenceCount": 189,
-    "isProtected": false
-  },
-  {
-    "taxonKey": 8879395,
-    "scientificName": "Daedalea quercina",
-    "namePl": "Gmatwek dębowy",
-    "occurrenceCount": 188,
+    "taxonKey": 2551299,
+    "scientificName": "Russula claroflava",
+    "namePl": "Gołąbek jasnożółty",
+    "occurrenceCount": 196,
     "isProtected": false
   },
   {
     "taxonKey": 2524265,
     "scientificName": "Gyroporus cyanescens",
     "namePl": "Piaskowiec modrzak",
-    "occurrenceCount": 187,
+    "occurrenceCount": 195,
     "isProtected": false
   },
   {
-    "taxonKey": 9154166,
-    "scientificName": "Lentinus tigrinus",
-    "namePl": "Twardziak tygrysi",
-    "occurrenceCount": 187,
+    "taxonKey": 2530966,
+    "scientificName": "Laccaria proxima",
+    "namePl": "Lakówka okazała",
+    "occurrenceCount": 192,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 2538748,
+    "scientificName": "Hygrophorus hypothejus",
+    "namePl": "Wodnicha późna",
+    "occurrenceCount": 191,
     "isProtected": false
   },
   {
@@ -826,102 +812,74 @@
     "isProtected": false
   },
   {
-    "taxonKey": 8085341,
-    "scientificName": "Sphagnurus paluster",
-    "namePl": "Kępkowiec torfowiskowy",
-    "occurrenceCount": 187,
-    "isProtected": false
-  },
-  {
-    "taxonKey": 8179389,
-    "scientificName": "Rhodofomes roseus",
-    "namePl": "Pniarek różowy",
-    "occurrenceCount": 186,
-    "isProtected": true
-  },
-  {
-    "taxonKey": 2551299,
-    "scientificName": "Russula claroflava",
-    "namePl": "Gołąbek jasnożółty",
-    "occurrenceCount": 184,
-    "isProtected": false
-  },
-  {
     "taxonKey": 2551415,
     "scientificName": "Russula vesca",
     "namePl": "Gołąbek jadalny",
-    "occurrenceCount": 183,
+    "occurrenceCount": 186,
     "isProtected": false
   },
   {
-    "taxonKey": 8997022,
-    "scientificName": "Agrocybe praecox",
-    "namePl": "Polówka wczesna",
-    "occurrenceCount": 181,
+    "taxonKey": 2551392,
+    "scientificName": "Russula risigallina",
+    "namePl": "Gołąbek zmiennobarwny",
+    "occurrenceCount": 185,
     "isProtected": false
   },
   {
-    "taxonKey": 5242740,
-    "scientificName": "Coprinopsis atramentaria",
-    "namePl": "Czernidłak pospolity",
-    "occurrenceCount": 179,
+    "taxonKey": 8879395,
+    "scientificName": "Daedalea quercina",
+    "namePl": "Gmatwek dębowy",
+    "occurrenceCount": 184,
     "isProtected": false
   },
   {
     "taxonKey": 11260649,
     "scientificName": "Thelephora terrestris",
     "namePl": "Chropiatka naziemna",
-    "occurrenceCount": 179,
+    "occurrenceCount": 184,
     "isProtected": false
   },
   {
-    "taxonKey": 9223923,
-    "scientificName": "Russula adusta",
-    "namePl": "Gołąbek podpalany",
+    "taxonKey": 5242740,
+    "scientificName": "Coprinopsis atramentaria",
+    "namePl": "Czernidłak pospolity",
+    "occurrenceCount": 180,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 8085341,
+    "scientificName": "Sphagnurus paluster",
+    "namePl": "Kępkowiec torfowiskowy",
     "occurrenceCount": 177,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 8997022,
+    "scientificName": "Agrocybe praecox",
+    "namePl": "Polówka wczesna",
+    "occurrenceCount": 176,
     "isProtected": false
   },
   {
     "taxonKey": 2537958,
     "scientificName": "Baeospora myosura",
     "namePl": "Pieniążniczka szyszkowa",
-    "occurrenceCount": 175,
+    "occurrenceCount": 173,
     "isProtected": false
   },
   {
     "taxonKey": 2549065,
     "scientificName": "Diplomitoporus flavescens",
     "namePl": "Wrośniaczek sosnowy",
-    "occurrenceCount": 175,
-    "isProtected": false
-  },
-  {
-    "taxonKey": 7623986,
-    "scientificName": "Suillus bovinus",
-    "namePl": "Maślak sitarz",
-    "occurrenceCount": 175,
-    "isProtected": false
-  },
-  {
-    "taxonKey": 2553117,
-    "scientificName": "Stereum rugosum",
-    "namePl": "Skórnik pomarszczony",
     "occurrenceCount": 173,
     "isProtected": false
   },
   {
-    "taxonKey": 9043861,
-    "scientificName": "Suillus variegatus",
-    "namePl": "Maślak pstry",
-    "occurrenceCount": 172,
+    "taxonKey": 9223923,
+    "scientificName": "Russula adusta",
+    "namePl": "Gołąbek podpalany",
+    "occurrenceCount": 171,
     "isProtected": false
-  },
-  {
-    "taxonKey": 9225326,
-    "scientificName": "Strobilomyces strobilaceus",
-    "namePl": "Szyszkowiec łuskowaty",
-    "occurrenceCount": 170,
-    "isProtected": true
   },
   {
     "taxonKey": 5243575,
@@ -931,11 +889,18 @@
     "isProtected": false
   },
   {
-    "taxonKey": 2551213,
-    "scientificName": "Russula emetica",
-    "namePl": "Gołąbek wymiotny",
+    "taxonKey": 9154166,
+    "scientificName": "Lentinus tigrinus",
+    "namePl": "Twardziak tygrysi",
     "occurrenceCount": 169,
     "isProtected": false
+  },
+  {
+    "taxonKey": 8179389,
+    "scientificName": "Rhodofomes roseus",
+    "namePl": "Pniarek różowy",
+    "occurrenceCount": 169,
+    "isProtected": true
   },
   {
     "taxonKey": 5954691,
@@ -945,9 +910,9 @@
     "isProtected": false
   },
   {
-    "taxonKey": 8383534,
-    "scientificName": "Hapalopilus rutilans",
-    "namePl": "Miękusz rabarbarowy",
+    "taxonKey": 2553117,
+    "scientificName": "Stereum rugosum",
+    "namePl": "Skórnik pomarszczony",
     "occurrenceCount": 168,
     "isProtected": false
   },
@@ -955,49 +920,35 @@
     "taxonKey": 5243279,
     "scientificName": "Lycoperdon excipuliforme",
     "namePl": "Purchawka fiolowata",
-    "occurrenceCount": 168,
+    "occurrenceCount": 167,
     "isProtected": false
   },
   {
     "taxonKey": 5242048,
     "scientificName": "Lepista nuda",
     "namePl": "Gąsówka naga",
-    "occurrenceCount": 167,
-    "isProtected": false
-  },
-  {
-    "taxonKey": 5249216,
-    "scientificName": "Gloeophyllum odoratum",
-    "namePl": "Niszczyca pachnąca",
     "occurrenceCount": 166,
     "isProtected": false
   },
   {
-    "taxonKey": 5954805,
-    "scientificName": "Exidia nigricans",
-    "namePl": "Kisielnica kędzierzawa",
+    "taxonKey": 2551213,
+    "scientificName": "Russula emetica",
+    "namePl": "Gołąbek wymiotny",
     "occurrenceCount": 165,
     "isProtected": false
   },
   {
-    "taxonKey": 9186214,
-    "scientificName": "Lactarius subdulcis",
-    "namePl": "Mleczaj bukowy",
-    "occurrenceCount": 165,
+    "taxonKey": 8383534,
+    "scientificName": "Hapalopilus rutilans",
+    "namePl": "Miękusz rabarbarowy",
+    "occurrenceCount": 164,
     "isProtected": false
   },
   {
-    "taxonKey": 2531625,
-    "scientificName": "Phyllotopsis nidulans",
-    "namePl": "Boczniaczek pomarańczowożółty",
-    "occurrenceCount": 163,
-    "isProtected": false
-  },
-  {
-    "taxonKey": 5243525,
-    "scientificName": "Cystoderma amianthinum",
-    "namePl": "Ziarnówka ochrowożółta",
-    "occurrenceCount": 162,
+    "taxonKey": 7623986,
+    "scientificName": "Suillus bovinus",
+    "namePl": "Maślak sitarz",
+    "occurrenceCount": 164,
     "isProtected": false
   },
   {
@@ -1008,23 +959,51 @@
     "isProtected": false
   },
   {
+    "taxonKey": 9225326,
+    "scientificName": "Strobilomyces strobilaceus",
+    "namePl": "Szyszkowiec łuskowaty",
+    "occurrenceCount": 162,
+    "isProtected": true
+  },
+  {
+    "taxonKey": 5243525,
+    "scientificName": "Cystoderma amianthinum",
+    "namePl": "Ziarnówka ochrowożółta",
+    "occurrenceCount": 160,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 9186214,
+    "scientificName": "Lactarius subdulcis",
+    "namePl": "Mleczaj bukowy",
+    "occurrenceCount": 160,
+    "isProtected": false
+  },
+  {
     "taxonKey": 5240306,
     "scientificName": "Amanita vaginata",
     "namePl": "Muchomor mglejarka",
-    "occurrenceCount": 160,
+    "occurrenceCount": 159,
     "isProtected": false
   },
   {
-    "taxonKey": 7720839,
-    "scientificName": "Athelia arachnoidea",
-    "namePl": "Błonka dwuzarodnikowa",
-    "occurrenceCount": 160,
+    "taxonKey": 2537689,
+    "scientificName": "Megacollybia platyphylla",
+    "namePl": "Pieniążnica szerokoblaszkowa",
+    "occurrenceCount": 159,
     "isProtected": false
   },
   {
-    "taxonKey": 5249883,
-    "scientificName": "Clavulina coralloides",
-    "namePl": "Goździanka koralowa",
+    "taxonKey": 2531625,
+    "scientificName": "Phyllotopsis nidulans",
+    "namePl": "Boczniaczek pomarańczowożółty",
+    "occurrenceCount": 159,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 5239959,
+    "scientificName": "Scleroderma verrucosum",
+    "namePl": "Tęgoskór brodawkowany",
     "occurrenceCount": 159,
     "isProtected": false
   },
@@ -1032,21 +1011,42 @@
     "taxonKey": 2554367,
     "scientificName": "Geastrum triplex",
     "namePl": "Gwiazdosz potrójny",
-    "occurrenceCount": 159,
+    "occurrenceCount": 158,
     "isProtected": false
   },
   {
-    "taxonKey": 8824388,
-    "scientificName": "Guepinia helvelloides",
-    "namePl": "Płomyczka galaretowata",
-    "occurrenceCount": 159,
-    "isProtected": true
+    "taxonKey": 5249883,
+    "scientificName": "Clavulina coralloides",
+    "namePl": "Goździanka koralowa",
+    "occurrenceCount": 156,
+    "isProtected": false
   },
   {
-    "taxonKey": 2537689,
-    "scientificName": "Megacollybia platyphylla",
-    "namePl": "Pieniążnica szerokoblaszkowa",
-    "occurrenceCount": 158,
+    "taxonKey": 5954805,
+    "scientificName": "Exidia nigricans",
+    "namePl": "Kisielnica kędzierzawa",
+    "occurrenceCount": 155,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 2527135,
+    "scientificName": "Mycena sanguinolenta",
+    "namePl": "Grzybówka krwawiąca",
+    "occurrenceCount": 155,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 2533439,
+    "scientificName": "Hypholoma capnoides",
+    "namePl": "Maślanka łagodna",
+    "occurrenceCount": 154,
+    "isProtected": false
+  },
+  {
+    "taxonKey": 2551071,
+    "scientificName": "Lactifluus vellereus",
+    "namePl": "Mleczaj chrząstka",
+    "occurrenceCount": 154,
     "isProtected": false
   },
   {
@@ -1333,6 +1333,13 @@
     "taxonKey": 2540800,
     "scientificName": "Grifola frondosa",
     "namePl": "Żagwica listkowata",
+    "occurrenceCount": null,
+    "isProtected": true
+  },
+  {
+    "taxonKey": 8824388,
+    "scientificName": "Guepinia helvelloides",
+    "namePl": "Płomyczka galaretowata",
     "occurrenceCount": null,
     "isProtected": true
   },
